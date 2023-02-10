@@ -1,1 +1,28 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import '../node_modules/ol/ol.css';
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+.ol-zoom {
+    left: unset;
+    right: 8px;
+
+    .ol-zoom-in {
+        height: 32px;
+        width: 32px;
+        border-radius: 6px 6px 0px 0px;
+        font-size: 20px;
+    }
+    .ol-zoom-out {
+        height: 32px;
+        width: 32px;
+        border-radius: 0px 0px 6px 6px;
+        font-size: 20px;
+    }
+    
+}
