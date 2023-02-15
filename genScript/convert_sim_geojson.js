@@ -12,6 +12,7 @@ const output_dir = 'src/assets/result_all/'
 
 async function run() {
     for (const simul of input_sims) {
+        let count = 0;
         console.log('combining result of:', simul)
         const files = fs.readdirSync(input_dir + '_' + simul + '/');
         fs.writeFileSync(output_dir + simul +'.geojson', '{"type":"FeatureCollection","features":[')    
@@ -32,6 +33,10 @@ async function run() {
             const parsedGeojson = JSON.parse(geojsonFile)
             const featureString = JSON.stringify(parsedGeojson.features).slice(1, -1)
             fs.appendFileSync(output_dir + simul +'.geojson', featureString)
+            count += 1;
+            if (count >= 20) {
+                break
+            }
         }
         fs.appendFileSync(output_dir + simul +'.geojson', ']}')
     }

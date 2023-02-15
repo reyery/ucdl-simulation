@@ -5,17 +5,6 @@ export function updateHUD({sim_name, col_range, unit}: {sim_name:string, col_ran
 
     let hud_msg = '<div style="line-height:1.1;">'
     hud_msg += '<h3>' + sim_name + '</h3><br>';
-    // if ('settings' in results) {
-    //     hud_msg += results.settings + '<br>'
-    // }
-    // hud_msg += 'Desirable range: ' + 
-    //         Math.round(des_range[0]) + ' to ' +  
-    //         Math.round(des_range[1]) + ' ' + unit + ' <br>' +
-    //     // 'Desirable area: ' + Math.round(des_area) + ' m2<br>' +
-    //     '<b>Score: ' + Math.round(score * 10)/10 + ' %</b><br>';
-    // if ('other' in results) {
-    //     hud_msg += results.other + '<br>'
-    // }
     hud_msg += '</div>'
     // create a legend for the Heads Up Display
     const leg_labels: string[] = [];

@@ -1,181 +1,86 @@
 import * as itowns from 'itowns';
+import * as THREE from "three";
+import { BUILDING_TILES_URL } from './viewer.const';
+import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
+const sim = new SIMFuncs()
 
-export function getLayers(): itowns.ColorLayer[] {
-    const viewColorLayers: itowns.ColorLayer[] = [];
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'OpenStreetMap',
-            crs: 'EPSG:3857',
-            format: 'image/png',
-            url: 'https://a.tile.openstreetmap.org/${z}/${x}/${y}.png',
-            attribution: {
-                name: 'Open Street Map',
-                html: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            },
-            tileMatrixSet: 'PM',
-            zoom: {
-                min: 0,
-                max: 19
-            }
-        })
-    }));
+export async function getAllBuildings(view): Promise<boolean> {
+    const geometrySource = new itowns.WFSSource({
+        url: BUILDING_TILES_URL,
+        typeName: 'sg_sim:sg_buildings',
+        crs: 'EPSG:4326',
+    });
 
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'OpenTopoMap',
-            crs: 'EPSG:3857',
-            format: 'image/png',
-            url: 'https://a.tile.opentopomap.org/${z}/${x}/${y}.png',
-            attribution: {
-                name: 'Open Topo Map',
-                html: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    const geometryLayer = new itowns.FeatureGeometryLayer('Buildings', {
+        source: geometrySource,
+        style: new itowns.Style({
+            fill: {
+                color: new THREE.Color(0xdddddd),
+                base_altitude: 0,
+                extrusion_height: properties => properties.AGL,
             },
-            tileMatrixSet: 'PM',
-            zoom: {
-                min: 0,
-                max: 17
-            }
-        })
-    }));
+        }),
+    });
 
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Stamen Toner',
-            crs: 'EPSG:3857',
-            format: 'image/png',
-            url: 'https://stamen-tiles.a.ssl.fastly.net/toner/${z}/${x}/${y}.png',
-            attribution: {
-                name: 'Stamen Toner',
-                html: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            },
-            tileMatrixSet: 'PM'
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Stamen Terrain',
-            crs: 'EPSG:3857',
-            format: 'image/png',
-            url: 'https://stamen-tiles.a.ssl.fastly.net/terrain/${z}/${x}/${y}.png',
-            attribution: {
-                name: 'Stamen Terrain',
-                html: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            },
-            tileMatrixSet: 'PM',
-            zoom: {
-                min: 0,
-                max: 18
-            }
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Stamen Watercolor',
-            crs: 'EPSG:3857',
-            format: 'image/png',
-            url: 'https://stamen-tiles.a.ssl.fastly.net/watercolor/${z}/${x}/${y}.png',
-            attribution: {
-                name: 'Stamen Watercolor',
-                html: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            },
-            tileMatrixSet: 'PM',
-            zoom: {
-                min: 1,
-                max: 16
-            }
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.WMTSSource({
-            name: 'ArcGIS Terrain',
-            crs: 'EPSG:3857',
-            format: 'image/jpg',
-            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/',
-            attribution: {
-                name: 'ArcGIS Terrain',
-                html: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            },
-            tileMatrixSet: 'PM'
-        })
-    }));
+    view.addLayer(geometryLayer);
 
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Google Map - Roadmap',
-            crs: 'EPSG:3857',
-            format: 'image/jpg',
-            url: 'https://mt1.google.com/vt/lyrs=m&x=${x}&y=${y}&z=${z}',
-            attribution: {
-                name: 'Google Map - Roadmap',
-                html: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
-            },
-            tileMatrixSet: 'PM',
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Google Map - Altered Roadmap',
-            crs: 'EPSG:3857',
-            format: 'image/jpg',
-            url: 'https://mt1.google.com/vt/lyrs=r&x=${x}&y=${y}&z=${z}',
-            attribution: {
-                name: 'Google Map - Altered Roadmap',
-                html: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
-            },
-            tileMatrixSet: 'PM',
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Google Map - Satellite Only',
-            crs: 'EPSG:3857',
-            format: 'image/jpg',
-            url: 'https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}',
-            attribution: {
-                name: 'Google Map - Satellite Only',
-                html: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
-            },
-            tileMatrixSet: 'PM',
-        })
-    }));
-    viewColorLayers.push(new itowns.ColorLayer('ColorLayer', {
-        source: new itowns.TMSSource({
-            name: 'Google Map - Hybrid',
-            crs: 'EPSG:3857',
-            format: 'image/jpg',
-            url: 'https://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${z}',
-            attribution: {
-                name: 'Google Map - Hybrid',
-                html: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
-            },
-            tileMatrixSet: 'PM',
-        })
-    }));
-
-
-    const here1 = 'https://1.';
-    const here2 = '.maps.ls.hereapi.com/maptile/2.1/maptile/newest/';
-    const here3 = '/{z}/{x}/{y}/{width}/png8?apiKey=';
-
-    return viewColorLayers;
+    return true
 }
 
+export async function getResultLayer(view, type) {
+    console.log(type)
+    const wmsSource = new itowns.WMSSource({
+        url: BUILDING_TILES_URL.replace('wfs', 'wms'),
+        name: type + '_png',
+        transparent: true,
+        crs: 'EPSG:4326',
+        extent: {
+            west: '103.60305',
+            east: '104.08385',
+            south: '1.21725',
+            north: '1.47507',
+        },
+    });
 
-export function getTerrains(): (null|itowns.ElevationLayer)[] {
-    const viewElevationLayers: (null|itowns.ElevationLayer)[] = [];
-    viewElevationLayers.push(null);
-    viewElevationLayers.push(new itowns.ElevationLayer('ElevationLayer', {
-        source: new itowns.WMTSSource({
-            crs: 'EPSG:3857',
-            url: 'http://wxs.ign.fr/3ht7xcw6f7nciopo16etuqp2/geoportail/wmts',
-            name: 'Elevation',
-            tileMatrixSet: 'WGS84G',
-            format: 'image/x-bil;bits=32',
-            attribution: {
-                name: 'Elevation'
-            }
-        })
-    }));
-    return viewElevationLayers;
+    const geometryLayer = new itowns.ColorLayer('resultLayer', {
+        source: wmsSource,
+        opacity: 0.5,
+    });
+
+    console.log(geometryLayer)
+    view.addLayer(geometryLayer);
 }
 
+export async function removeResultLayer(view) {
+    const layer = view.getLayerById('resultLayer')
+    if (!layer) { return; }
+    view.removeLayer('resultLayer');
+}
+
+export function updateHUD({sim_name, col_range, unit}: {sim_name:string, col_range: number[], unit: string}) {
+    let hud_msg = '<div style="line-height:1.1;">'
+    hud_msg += '<h3>' + sim_name + '</h3><br>';
+    hud_msg += '</div>'
+    // create a legend for the Heads Up Display
+    const leg_labels: string[] = [];
+    const col_range_diff = col_range[1] - col_range[0];
+    const num_labels = 11;
+    for (let i = 0; i < num_labels; i ++) {
+        const val = col_range[0] + (col_range_diff * (i / (num_labels - 1)));
+        const val_sf = sim.inl.sigFig(val, 2);
+        leg_labels.push(val_sf + ' ' + unit);
+    }
+    const hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels);
+    // Heads Up Display
+    const hud_elm = document.getElementById('hud') as HTMLDivElement;
+    if (hud_elm) {
+        if (sim_name === 'None') {
+            if (!hud_elm.classList.contains('hidden')) {
+                hud_elm.classList.add('hidden')
+            }
+        } else {
+            hud_elm.classList.remove('hidden')
+        }
+        hud_elm.innerHTML = hud_msg + hud_leg
+    }
+}

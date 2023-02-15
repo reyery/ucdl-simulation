@@ -5,6 +5,9 @@ const proj4 = require('proj4');
 
 const LONGLAT = [103.778329, 1.298759];
 
+const resulting =   '+proj=tmerc +lat_0=1.2173604125554882 +lon_0=103.6031185124633 ' +
+                    '+k=0.1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +vunits=m +no_defs '
+
 const input_dir = 'src/assets/result'
 const output_dir = 'src/assets/result_full'
 
@@ -166,7 +169,8 @@ for (const mode of SIM_DATA) {
         for (const pgon of pgons) {
             const pgon_num = Number(pgon.split('pg')[1])
             const x = pgon_num % 50 + fileCoords[0]
-            const y = minmaxrange1[1] - (Math.floor(pgon_num / 50) + fileCoords[1])
+            const y = Math.floor(pgon_num / 50) + fileCoords[1]
+            // const y = minmaxrange1[1] - (Math.floor(pgon_num / 50) + fileCoords[1])
 
             const v = sim.query.Get('_v', pgon);
             const color = '#' + sim.attrib.Get(v[0], 'rgb').map(x => {
@@ -184,6 +188,5 @@ for (const mode of SIM_DATA) {
     const buffer = canvas.toBuffer("image/png", {
         compressionLevel: 9,
     });
-    fs.writeFileSync(outDir + '/result_' + mode.id + '1.png', buffer);
-    break;
+    fs.writeFileSync(outDir + '/' + mode.id + '_png.png', buffer);
 }
