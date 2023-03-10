@@ -195,10 +195,12 @@ async function run(type, filename) {
         const col_range = [0, 100];
         outDir = '_solar/'
         const result = eval_solar(sim, gen)
+        fs.writeFileSync(output_dir + '_raw' + outDir + filename + '.json', JSON.stringify(result))
+        return
         shared.visSimResults(sim, result, 'solar_exposure', col_range);    
 
     } else if (type === 'sky') {
-        const col_range = [0, 100];
+        const col_range = [100, 0];
         outDir = '_sky/'
         const result = eval_sky(sim, gen)
         shared.visSimResults(sim, result, 'sky_exposure', col_range);

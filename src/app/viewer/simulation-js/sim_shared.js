@@ -6,7 +6,7 @@
  * @param {*} model_data 
  * @param {*} context_data 
  */
-function initModel(sim, model_data, context_data = null) {
+export function initModel(sim, model_data, context_data = null) {
     // import model data
     sim.io.ImportData(model_data, 'sim');
     if (context_data !== null) {
@@ -23,7 +23,7 @@ function initModel(sim, model_data, context_data = null) {
  * @param {*} sens_type Either 'facade' or 'ground'
  * @returns A list of lists, [sens_rays, sens_obs, sens_pgons]
  */
-function getSensObs(sim, sens_type) {
+export function getSensObs(sim, sens_type) {
     const all_pgons = sim.query.Get('pg', null);
     // get sensor polygons
     const sens_pgons = sim.query.Filter(all_pgons, 'type', '==', sens_type);
@@ -43,7 +43,7 @@ function getSensObs(sim, sens_type) {
  * @param {*} sens_pgons A list of polygon IDs used for generating sensors. 
  * @returns A list of lists, [sens_rays, sens_obs]
  */
- function getSensObsFromPgons(sim, sens_pgons) {
+export function getSensObsFromPgons(sim, sens_pgons) {
     const all_pgons = sim.query.Get('pg', null);
     // get rays
     const sens_rays = sim.calc.Ray(sens_pgons);
@@ -59,7 +59,7 @@ function getSensObs(sim, sens_type) {
  * @param {*} obs_pgons A list of polygon IDs of obstructions.
  * @param {*} sim_name The name of the simulation, for error messages.
  */
-function checkErrorBeforSim(sim_name, sens_rays, obs_pgons) {
+export function checkErrorBeforSim(sim_name, sens_rays, obs_pgons) {
     // check for error befre sim
     if (sens_rays.length === 0 || obs_pgons.length === 0) {
         const msg = 'Error in ' + sim_name + ' evaluation: '+  
@@ -75,7 +75,7 @@ function checkErrorBeforSim(sim_name, sens_rays, obs_pgons) {
  * @param {*} values A list of numbers.
  * @param {*} sim_name The name of the simulation, for error messages.
  */
-function checkErrorAfterSim(sim_name, sens_rays, values) {
+export function checkErrorAfterSim(sim_name, sens_rays, values) {
     if (!values) {
         const msg = 'Error in ' + sim_name + ': results = ' + values + '.';
         console.log(msg);
@@ -101,7 +101,7 @@ function checkErrorAfterSim(sim_name, sens_rays, values) {
  * @param {*} attrib_name The name of the attribute to create in the model.
  * @param {*} col_range A list of 2 numbers, [min, max], the colour range.
  */
-function visSimResults(sim, results, attrib_name, col_range) {
+export function visSimResults(sim, results, attrib_name, col_range) {
     const {sim_name, sens_type, values, des_range, des_area, score, unit} = results;
     const sens_pgons = getSensorPgons(sim, sim_name, sens_type, values);
     // create colors for polygons
@@ -151,7 +151,7 @@ function visSimResults(sim, results, attrib_name, col_range) {
  * @param {*} values A list of numbers
  * @returns 
  */
- function northSign(sim, xyz) {
+export function northSign(sim, xyz) {
     // create a north sign
     const north_plines = sim.visualize.Ray([xyz, [0, 100, 0]], 20);
     const north1 = sim.poly2d.OffsetMitre([north_plines[1],north_plines[2]], 10, 10, 'square_end');
@@ -170,7 +170,7 @@ function visSimResults(sim, results, attrib_name, col_range) {
  * @param {*} values A list of numbers
  * @returns 
  */
-function getSensorPgons(sim, sim_name, sens_type, values) {
+export function getSensorPgons(sim, sim_name, sens_type, values) {
     // get the polygons being evaluated
     const sens_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', sens_type);
     // check we have right number of values
@@ -195,7 +195,7 @@ function getSensorPgons(sim, sim_name, sens_type, values) {
  * @param {*} values A list of numbers
  * @returns 
  */
- function crossSensPgons(sim, values, sens_pgons, des_range) {
+export function crossSensPgons(sim, values, sens_pgons, des_range) {
     const [des_min, des_max] = des_range;
     // calculate areas for good and bag pgons
     for (let i = 0; i < sens_pgons.length; i++) {
@@ -223,7 +223,7 @@ function getSensorPgons(sim, sim_name, sens_type, values) {
  * @param {*} des_range A list of 2 numbers [min, max], the desired range for this analysis.
  * @returns The score, a % between 0 and 100.
  */
-function calcScore(sim, values, sens_pgons, des_range) {
+export function calcScore(sim, values, sens_pgons, des_range) {
     const [des_min, des_max] = des_range;
     // calculate areas for good and bag pgons
     let des_area = 0;
@@ -251,7 +251,7 @@ function calcScore(sim, values, sens_pgons, des_range) {
  * @param {*} sens_pgons A list of polygon IDs used for generating sensors. 
  * @returns The UHI score, a delta in degrees.
  */
- function calcUHI(sim, values, sens_pgons) {
+export function calcUHI(sim, values, sens_pgons) {
     let total_area = 0;
     let total_uhi = 0;
     for (let i = 0; i < sens_pgons.length; i++) {
@@ -271,7 +271,7 @@ function calcScore(sim, values, sens_pgons, des_range) {
  * @param {*} sim 
  * @returns Two lists, the polyline IDs of the roads, and a list of noise levels (in dB).
  */
-function getRoads(sim) {
+export function getRoads(sim) {
     const plines = sim.query.Get('pl', null);
     const roads = [];
     const noise_lvls = []
@@ -295,7 +295,7 @@ function getRoads(sim) {
  * @param {*} sim 
  * @returns A list of unique position IDs.
  */
-function getVisPosis(sim) {
+export function getVisPosis(sim) {
     const posis_set = new Set();
     // and pgon posis
     for (const pgon of sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'scenic')) {
@@ -320,7 +320,7 @@ function getVisPosis(sim) {
  * @param {*} path 
  * @param {*} data 
  */
-function writeFile(path, data) {  // }, {encoding: 'utf8'}) {
+export function writeFile(path, data) {  // }, {encoding: 'utf8'}) {
     // try {
     //     fs.writeFileSync(path, data);
     // } catch(err) {
@@ -329,20 +329,5 @@ function writeFile(path, data) {  // }, {encoding: 'utf8'}) {
     //     throw new Error("Error reading file: " + err.message);
     // }
     //console.log("Writing " + msg + " file successful.");
-}
-// =================================================================================================
-module.exports = { 
-    initModel: initModel,
-    getSensObs: getSensObs,
-    getSensObsFromPgons: getSensObsFromPgons,
-    checkErrorBeforSim: checkErrorBeforSim,
-    checkErrorAfterSim: checkErrorAfterSim,
-    visSimResults:visSimResults,
-    getSensorPgons: getSensorPgons,
-    calcScore: calcScore,
-    calcUHI: calcUHI,
-    getRoads: getRoads,
-    getVisPosis: getVisPosis,
-    writeFile: writeFile
 }
 // =================================================================================================

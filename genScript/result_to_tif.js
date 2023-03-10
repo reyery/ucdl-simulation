@@ -12,34 +12,24 @@ const input_dir = 'src/assets/result'
 const output_dir = 'src/assets/result_full'
 
 const SIM_DATA = [
-    // {
-    //     id: 'solar',
-    //     sim_name: 'Solar Exposure',
-    //     sim_attr: 'solar_exposure',
-    //     col_range: [0, 100],
-    //     unit: '%'
-    // },
     {
-        id: 'sky',
+        id: 'solar',
         sim_name: 'Solar Exposure',
-        sim_attr: 'sky_exposure',
+        col_range: [0, 100],
+        unit: '%'
+    },
+    {
+        id: 'uhi',
+        sim_name: 'Urban Heat Island',
+        col_range: [2, 6],
+        unit: 'deg'
+    },
+    {
+        id: 'wind',
+        sim_name: 'Wind permeability',
         col_range: [100, 0],
         unit: '%'
     },
-    // {
-    //     id: 'uhi',
-    //     sim_name: 'Urban Heat Island',
-    //     sim_attr: 'uhi',
-    //     col_range: [2, 6],
-    //     unit: 'deg'
-    // },
-    // {
-    //     id: 'wind',
-    //     sim_name: 'Wind permeability',
-    //     sim_attr: 'wind_per',
-    //     col_range: [100, 0],
-    //     unit: '%'
-    // },
 ]
 
 function drawPixel(context, x, y, color) {
@@ -109,7 +99,6 @@ for (const mode of SIM_DATA) {
         sim.io.ImportData(fileData, 'sim');
         const pgons = sim.query.Get('pg', null)
         console.log(file)
-        sim.visualize.Gradient(pgons, mode.sim_attr, mode.col_range, ['green','yellow','red']);
         for (const pgon of pgons) {
             const pgon_num = Number(pgon.split('pg')[1])
             const x = pgon_num % 50 + fileCoords[0]

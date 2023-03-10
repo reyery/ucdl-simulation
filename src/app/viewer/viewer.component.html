@@ -1,75 +1,85 @@
 <div id="itowns_container" class="w-[100vw] h-[100vh]"></div>
 <div id="leaflet_container" class="w-[100vw] h-[100vh] hidden"></div>
-<div class="absolute z-[500] inline-flex text-left top-2 left-2">
-    <div class="relative text-gray-600">
-        <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_content')"
-            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-            id="menu-button" aria-expanded="true" aria-haspopup="true">
-            {{selected_simulation.sim_name}}
-            <!-- Heroicon name: mini/chevron-down -->
-            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                fontIcon="expand_more"></mat-icon>
-        </button>
-        <div id="sim_select_content"
-            class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-            <div class="py-1" role="none">
-                <button *ngFor="let sim of sim_data_list; index as i"
-                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                    role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i" (mousedown)="changeSim($event, sim.id)">
-                    {{sim.sim_name}}
-                </button>
+<div class="absolute z-[500] inline-flex text-left top-1 left-1">
+    <div id="whole_singapore_container" class="grid p-2 bg-white rounded-md bg-opacity-70">
+        <span class="px-1 font-medium">Whole Singapore</span>
+        <div id="sim_select_container" class="relative text-gray-600 ">
+            <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_content')"
+                class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                id="menu-button" aria-expanded="true" aria-haspopup="true">
+                {{selected_simulation.display_name}}
+                <!-- Heroicon name: mini/chevron-down -->
+                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                    fontIcon="expand_more"></mat-icon>
+            </button>
+            <div id="sim_select_content"
+                class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                <div class="py-1" role="none">
+                    <button *ngFor="let sim of sim_data_list; index as i"
+                        class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                        role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i"
+                        (mousedown)="changeSim($event, sim.id)">
+                        {{sim.display_name}}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    <div id="toggle_openlayers_container" class="inline-flex ml-2">
-        <button type="button" (click)="toggleOpenlayersMode()" [class]='toggleOpenlayersBtnClass()'
-            id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true" title="Draw Area">
-            <mat-icon class="font-[22px] text-gray-600" aria-hidden="false" aria-label="Example home icon" fontIcon="draw"></mat-icon>
-        </button>
-        <div id="simulation_select" class="hidden ml-2">
-            <div class="inline-flex">
-                <div class="relative text-gray-600">
-                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
-                        class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                        id="menu-button" aria-expanded="true" aria-haspopup="true">
-                        <span>{{drawSim.sim_name}}</span>
-                        <!-- Heroicon name: mini/chevron-down -->
-                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                            fontIcon="expand_more"></mat-icon>
-                    </button>
-                    <div id="sim_select_apply"
-                        class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                        <div class="py-1" role="none">
-                            <button *ngFor="let sim of sim_data_list.slice(1); index as i"
-                                class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i" (mousedown)="changeDrawSim($event, sim.id)">
-                                {{sim.sim_name}}
-                            </button>
+    <div id="toggle_openlayers_container" class="grid grid-rows-1 p-2 ml-2 bg-white rounded-md bg-opacity-70">
+        <span class="px-1 font-medium">Area Select</span>
+        <div id="simulation_select_container" class="inline-flex justify-center">
+            <button type="button" (click)="toggleOpenlayersMode()" [class]='toggleOpenlayersBtnClass()'
+                id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                <mat-icon class="font-[22px] text-gray-600" aria-hidden="false" aria-label="Example home icon"
+                    fontIcon="draw"></mat-icon>
+            </button>
+            <div id="simulation_select" class="hidden ml-2">
+                <div class="inline-flex">
+                    <div id="drawsim_select_container" class="relative text-gray-600">
+                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
+                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                            id="menu-button" aria-expanded="true" aria-haspopup="true">
+                            <span>{{drawSim.sim_name}}</span>
+                            <!-- Heroicon name: mini/chevron-down -->
+                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                fontIcon="expand_more"></mat-icon>
+                        </button>
+                        <div id="sim_select_apply"
+                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                            <div class="py-1" role="none">
+                                <button *ngFor="let sim of sim_data_list.slice(1); index as i"
+                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                    role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i"
+                                    (mousedown)="changeDrawSim($event, sim.id)">
+                                    {{sim.sim_name}}
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    <button type="button" (click)="runSim()"
+                        class='w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
+                        id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                        Apply
+                    </button>
                 </div>
-                <button type="button" (click)="runSimulation()" class='w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
-                    id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true" title="Draw Area">
-                    Apply
-                </button>
             </div>
         </div>
     </div>
 </div>
 <div id="openlayers_container" class="absolute z-[500] w-8 m-[1px] text-left top-20 right-2 hidden">
     <button type="button" (click)="toggleDrawMode()" [class]='toggleDrawBtnClass()' id="toggle_draw_btn"
-        aria-expanded="true" aria-haspopup="true" title="Draw Area">
+        aria-expanded="true" aria-haspopup="true">
         <mat-icon class="text-[20px]" aria-hidden="false" aria-label="polyline" fontIcon="polyline"></mat-icon>
     </button>
-    <button type="button" (click)="resetDrawing()" 
-        class='inline-flex justify-center w-8 h-8 p-1 font-medium text-gray-700 bg-white border border-gray-300 rounded-b-md hover:bg-gray-100 focus:outline-none focus:ring-0' 
-        id="clear_draw_btn"
-        aria-expanded="true" aria-haspopup="true" title="Clear">
-        <mat-icon class="text-[20px] text-gray-600" aria-hidden="false" aria-label="delete" fontIcon="delete"></mat-icon>
+    <button type="button" (click)="resetDrawing()"
+        class='inline-flex justify-center w-8 h-8 p-1 font-medium text-gray-700 bg-white border border-gray-300 rounded-b-md hover:bg-gray-100 focus:outline-none focus:ring-0'
+        id="clear_draw_btn" aria-expanded="true" aria-haspopup="true" title="Clear">
+        <mat-icon class="text-[20px] text-gray-600" aria-hidden="false" aria-label="delete"
+            fontIcon="delete"></mat-icon>
     </button>
 </div>
 
-<div id="hud" class="absolute top-0 right-0 z-10 hidden px-4 py-2 bg-gray-200 rounded-md bg-opacity-70"></div>
+<div id="hud" class="absolute z-10 hidden w-40 px-4 py-2 bg-gray-200 rounded-md left-1 top-24 bg-opacity-70"></div>
 <div id="current_sim" class="hidden">None</div>

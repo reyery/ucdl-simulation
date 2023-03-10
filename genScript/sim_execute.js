@@ -202,7 +202,7 @@ function eval_wind(sim, model_data, sens_type = 'ground') {
 //             shared.visSimResults(sim, result, 'solar_exposure', col_range);    
 
 //         } else if (type === 'sky') {
-//             const col_range = [0, 100];
+//             const col_range = [100, 0];
 //             outDir = '_sky/'
 //             const result = eval_sky(sim, gen)
 //             shared.visSimResults(sim, result, 'sky_exposure', col_range);
@@ -284,4 +284,4 @@ async function run(type) {
 // for (const i in ['solar', 'uhi', 'wind']) {
 //     run(i)
 // }
-run('wind')
+run('solar')
