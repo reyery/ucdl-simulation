@@ -98,7 +98,7 @@ export function raster_to_sim(bounds, data, info) {
         return [sim, projWGS84.inverse(extent2.bottom_left), range]
     }
 
-    sim.visualize.Gradient(pgons, 'data', info.col_range, ['white','#023858']);
+    sim.visualize.Gradient(pgons, 'data', info.col_range, ['white','#EB6E00']);
     const values = sim.attrib.Get(pgons, 'data')
     const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
     const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
@@ -155,8 +155,9 @@ export function raster_to_sim_sky(bounds, data, info) {
         for (let j = 0; j < data.data[i].length; j++) {
             const v = data.data[i][j]
             values.push(v)
-            // ['white','#023858']
-            const colorVal = [v * 255, v * 200 + 55, v * 165 + 90]
+            // ['white','#EB6E00']
+            const colorVal = [v * 20 + 235, v * 145 + 110, v * 255]
+            // const colorVal = [v * 255, v * 200 + 55, v * 165 + 90]
             // const colorVal = [v * 255, v * 255, v * 255]
             // console.log(v, colorVal)
             const color = 'rgba(' + colorVal.join(',') + ',255)';

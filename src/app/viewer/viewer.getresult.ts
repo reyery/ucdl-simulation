@@ -111,7 +111,7 @@ export function updateHUD({ sim_name, col_range, unit, extra_info, desc }: { sim
     }
     let hud_leg
     if (sim_name === 'Urban Heat Island Intensity') {
-        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, ['white','#023858']);
+        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, ['white','#EB6E00']);
     } else {
         hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, ['green','yellow','red']);
     }
