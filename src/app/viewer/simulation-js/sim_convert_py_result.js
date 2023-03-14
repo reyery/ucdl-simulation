@@ -1,16 +1,16 @@
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs"
-import * as shared from "./sim_shared.js"
-import {execute as generate} from "./sim_generate.js"
-import { sg_wind } from "./sg_wind_all.js"
-import { sg_wind_stn_data } from "./sg_wind_station_data.js"
 import proj4 from 'proj4';
-import * as shapefile from 'shapefile';
-import { createCanvas, createImageData } from 'canvas';
+import { createCanvas } from 'canvas';
+import Shape from '@doodle3d/clipper-js';
+import { scale as chromaScale } from 'chroma-js';
+
+const SVY21 = "+proj=tmerc +lat_0=1.36666666666667 +lon_0=103.833333333333 +k=1 +x_0=28001.642 +y_0=38744.572 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 const LONGLAT = [103.778329, 1.298759];
 const TILE_SIZE = 500;
 
 const projWGS84 = _createProjection('WGS84')
+export const projWGS84toSVY21 = proj4('WGS84', SVY21)
 
 function _createProjection(proj_from_str) {
     // create the function for transformation
@@ -24,6 +24,7 @@ function _createProjection(proj_from_str) {
     const proj_obj = proj4(proj_from_str, proj_to_str);
     return proj_obj;
 }
+
 
 export function raster_to_sim(bounds, data, info) {
     const projObj = _createProjection(data.proj)
@@ -94,11 +95,11 @@ export function raster_to_sim(bounds, data, info) {
         sim.edit.Delete(keepPgons, 'delete_selected')
         const allPgons = sim.query.Get('pg', null)
     
-        sim.visualize.Gradient(allPgons, 'data', range, ['green','yellow','red']);
+        sim.visualize.Gradient(allPgons, 'data', range, info.col_scale);
         return [sim, projWGS84.inverse(extent2.bottom_left), range]
     }
 
-    sim.visualize.Gradient(pgons, 'data', info.col_range, ['white','#EB6E00']);
+    sim.visualize.Gradient(pgons, 'data', info.col_range, info.col_scale);
     const values = sim.attrib.Get(pgons, 'data')
     const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
     const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
@@ -121,6 +122,9 @@ export function raster_to_sim_sky(bounds, data, info) {
         bottom_left: projObj.forward([extent.left, extent.bottom]),
         top_right: projObj.forward([extent.right, extent.top]),
     }
+    const width = (extent2.top_right[0] - extent2.bottom_left[0]) / data.data[0].length
+    const height = (extent2.top_right[1] - extent2.bottom_left[1]) / data.data.length
+
     console.log('data.extent', data.extent)
 
     const sim = new SIMFuncs()
@@ -149,22 +153,56 @@ export function raster_to_sim_sky(bounds, data, info) {
     const canvas = createCanvas(data.data[0].length * 2, data.data.length * 2);
     const context = canvas.getContext("2d");
 
+    let boundShape = new Shape([bound_coords.map(coord => {return {X: coord[0], Y: coord[1]}})])
+    if (boundShape.totalArea() < 0) {
+        boundShape = new Shape([bound_coords.map(coord => {return {X: coord[0], Y: coord[1]}}).reverse()])
+    }
+    console.log(boundShape)
+    console.log(boundShape.totalArea())
     const values = []
+    const cornerCheck = {}
     // const imgDataArr = []
+
+    const colorScale = chromaScale(info.col_scale).domain(info.col_range);
+    function pyColor(properties) {
+        const val = properties.value
+        //@ts-ignore
+        const colors = colorScale(val).num();
+        console.log(colors)
+        return new THREE.Color(colors);
+    }
+
     for (let i = 0; i < data.data.length; i++) {
+        const r = data.data.length - 1 - i
         for (let j = 0; j < data.data[i].length; j++) {
-            const v = data.data[i][j]
-            values.push(v)
-            // ['white','#EB6E00']
-            const colorVal = [v * 20 + 235, v * 145 + 110, v * 255]
-            // const colorVal = [v * 255, v * 200 + 55, v * 165 + 90]
-            // const colorVal = [v * 255, v * 255, v * 255]
-            // console.log(v, colorVal)
-            const color = 'rgba(' + colorVal.join(',') + ',255)';
-            context.fillStyle = color
-            context.fillRect(j * 2 - 0.5, i * 2 - 0.5, 2, 2);
+            let check = false
+            for (let x = 0; x < 2; x++) {
+                for (let y = 0; y < 2; y++) {
+                    const idx = (j + x) + '_' + (r + y)
+                    if (cornerCheck[idx]) {
+                        check = true
+                        break
+                    } else if (cornerCheck[idx] === false) {
+                        continue
+                    }
+                    cornerCheck[idx] = boundShape.pointInShape({ X: width * (j + x), Y: height * (r + y) }, false, false)
+                    if (cornerCheck[idx]) {
+                        check = true
+                        break
+                    }
+                }
+                if (check) { break; }
+            }
+            if (check) {
+                const v = data.data[i][j]
+                values.push(v)
+                context.fillStyle = colorScale(v).css();
+                context.fillRect(j * 2 - 0.5, i * 2 - 0.5, 2, 2);
+            }
         }
     }
+
+    console.log('bound_coords', bound_coords)
 
     const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
     const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`

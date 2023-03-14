@@ -12,6 +12,7 @@ export const SIM_DATA = {
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
+        col_scale: ['white','black'],
         unit: '',
         building_type: 'extruded'
     },
@@ -22,7 +23,8 @@ export const SIM_DATA = {
         desc: '(measured by SVF)',
         type: 'py',
         maptype: 'tile',
-        col_range: [1, 0],
+        col_range: [0, 1],
+        col_scale: ['#EB6E00', 'white'],
         unit: '',
         building_type: 'extruded'
     },
@@ -43,6 +45,7 @@ export const SIM_DATA = {
         type: 'py',
         maptype: 'shp',
         col_range: [0, 0.75],
+        col_scale: ['green','yellow','red'],
         unit: '',
         building_type: 'flat'
     },
@@ -52,7 +55,8 @@ export const SIM_DATA = {
         sim_name: 'Neighborhood Wind Permeability',
         type: 'js',
         maptype: 'tile',
-        col_range: [100, 0],
+        col_range: [0, 100],
+        col_scale: ['red','yellow','green'],
         unit: '%',
         building_type: 'extruded'
     },
@@ -62,7 +66,8 @@ export const SIM_DATA = {
         sim_name: 'Anthropogenic Heat Dispersion',
         type: 'py',
         maptype: 'shp',
-        col_range: [0, 0.3],
+        col_range: [0, 0.33],
+        col_scale: ['green','yellow','red'],
         unit: '',
         building_type: 'flat'
     },
@@ -73,6 +78,7 @@ export const SIM_DATA = {
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
+        col_scale: ['green','yellow','red'],
         unit: '%',
         building_type: 'extruded'
     },

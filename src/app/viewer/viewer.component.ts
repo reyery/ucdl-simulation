@@ -5,13 +5,17 @@ import { BUILDING_TILES_URL, DEFAULT_LONGLAT, LONGLAT, SHOW_BUILDINGS, SIM_DATA 
 import { getResultLayer, removeResultLayer, updateHUD } from './viewer.getresult';
 import proj4 from 'proj4';
 
-import GeoJSON from 'ol/format/GeoJSON.js';
 import Map from 'ol/Map.js';
 import TileLayer from 'ol/layer/Tile.js';
 import TileWMS from 'ol/source/TileWMS.js';
 import View from 'ol/View.js';
 import XYZ from 'ol/source/XYZ';
 import Draw from 'ol/interaction/Draw.js';
+import Graticule from 'ol/layer/Graticule.js';
+import Stroke from 'ol/style/Stroke.js';
+import {getArea} from 'ol/sphere.js';
+import { Overlay } from 'ol';
+
 import { bbox as bboxStrategy } from 'ol/loadingstrategy.js';
 import { Modify, Select, Translate } from 'ol/interaction.js';
 import { useGeographic } from 'ol/proj.js';
@@ -51,6 +55,13 @@ const POINT_MATERIAL = new THREE.PointsMaterial({
   size: 100,
   sizeAttenuation: false
 });
+
+function formatArea(polygon) {
+  const area = getArea(polygon, {projection: 'EPSG:4326'});
+  return Math.round((area / 1000000) * 100) / 100 + ' ' + 'km<sup>2</sup>';
+};
+let measureTooltipElement;
+let measureTooltip;
 
 
 @Component({
@@ -309,6 +320,12 @@ export class ViewerComponent implements AfterViewInit {
     if (!this.drawModeOn) {
       this.toggleDrawMode()
     }
+    if (measureTooltip) {
+      this.map.removeOverlay(measureTooltip)
+      measureTooltipElement = null
+      measureTooltip = null
+    }
+    console.log(this.map)
   }
 
   updateLeafletMapPos() {
@@ -330,6 +347,21 @@ export class ViewerComponent implements AfterViewInit {
         url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
       }),
     })
+
+    const graticule_layer = new Graticule({
+      // the style to use for the lines, optional.
+      strokeStyle: new Stroke({
+        color: 'rgba(200,200,200,0.6)',
+        width: 1,
+        // lineDash: [2, 3],
+      }),
+      minZoom: 10,
+      targetSize: 10,
+      intervals: [100/111139],
+      showLabels: true,
+      wrapX: false,
+    })
+
 
     const vector_layer = new VectorLayer({
       source: source,
@@ -394,6 +426,7 @@ export class ViewerComponent implements AfterViewInit {
       layers: [map_layer,
         road_layer,
         building_layer,
+        graticule_layer,
         vector_layer],
       target: 'leaflet_container',
       view: new View({
@@ -403,16 +436,55 @@ export class ViewerComponent implements AfterViewInit {
       }),
     });
 
+    function createMeasureTooltip() {
+      if (measureTooltipElement) {
+        measureTooltipElement.parentNode.removeChild(measureTooltipElement);
+      }
+      if (measureTooltip) {
+        map.removeOverlay(measureTooltip)
+      }
+      measureTooltipElement = document.createElement('div');
+      measureTooltipElement.className = 'ol-tooltip ol-tooltip-measure';
+      measureTooltip = new Overlay({
+        element: measureTooltipElement,
+        offset: [0, -15],
+        positioning: 'bottom-center',
+        stopEvent: false,
+        insertFirst: false,
+      });
+      map.addOverlay(measureTooltip);
+    }
+    
     draw.addEventListener('drawstart', (data) => {
       console.log('draw start', data)
       source.clear()
+      // set sketch
+      createMeasureTooltip()
+      //@ts-ignore
+      const sketch = data.feature;
+
+      //@ts-ignore
+      let tooltipCoord = data.coordinate;
+
+      sketch.getGeometry().on('change', function (evt) {
+        const geom = evt.target;
+        const output = formatArea(geom);
+        tooltipCoord = geom.getInteriorPoint().getCoordinates();
+        measureTooltipElement.innerHTML = output;
+        measureTooltip.setPosition(tooltipCoord);
+      });
     })
+
     draw.addEventListener('drawend', (data) => {
       console.log('draw end', data)
       const btn = document.getElementById('toggle_draw_btn')
       if (btn) { btn.click() }
+
+      measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';
+      measureTooltip.setOffset([0, -7]);
     })
 
+    createMeasureTooltip()
     map.addInteraction(draw);
 
     this.map = map
@@ -434,9 +506,11 @@ export class ViewerComponent implements AfterViewInit {
         if (newCenter[0] && newCenter[1]) {
           const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
           console.log('transformCameraToLookAtTarget coord:', newViewCoord)
-          itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
-            coord: newViewCoord
-          })
+          setTimeout(() => {
+            itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+              coord: newViewCoord
+            })
+          }, 0);
         }
       }
       catch(ex) {

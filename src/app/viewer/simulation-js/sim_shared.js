@@ -101,7 +101,7 @@ export function checkErrorAfterSim(sim_name, sens_rays, values) {
  * @param {*} attrib_name The name of the attribute to create in the model.
  * @param {*} col_range A list of 2 numbers, [min, max], the colour range.
  */
-export function visSimResults(sim, results, attrib_name, col_range) {
+export function visSimResults(sim, results, attrib_name, simInfo) {
     const {sim_name, sens_type, values, des_range, des_area, score, unit} = results;
     const sens_pgons = getSensorPgons(sim, sim_name, sens_type, values);
     // create colors for polygons
@@ -109,7 +109,7 @@ export function visSimResults(sim, results, attrib_name, col_range) {
         col_range = [Math.min(...values), Math.max(...values)];
     }
     sim.attrib.Set(sens_pgons, attrib_name, values, 'many_values');
-    sim.visualize.Gradient(sens_pgons, attrib_name, col_range, ['green','yellow','red']);
+    sim.visualize.Gradient(sens_pgons, attrib_name, simInfo.col_range, simInfo.col_scale);
     // create crosses on undesirable pgons
     crossSensPgons(sim, values, sens_pgons, des_range);
     // create a message for the Heads Up Display

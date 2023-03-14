@@ -251,83 +251,7 @@ async function readSource(bounds) {
 }
 // Loop through all the files in the temp directory
 
-export async function simExecute(latLongs, type) {
-    // const minCoord = [99999, 99999];
-    // const maxCoord = [-99999, -99999];
-    // const coords = []
-    // console.log('~~~~~~~~~~~')
-    // for (const latlong of latLongs) {
-    //     const coord = [ ...proj_obj.forward(latlong), 0]
-    //     minCoord[0] = Math.min(coord[0], minCoord[0])
-    //     minCoord[1] = Math.min(coord[1], minCoord[1])
-    //     maxCoord[0] = Math.max(coord[0], maxCoord[0])
-    //     maxCoord[1] = Math.max(coord[1], maxCoord[1])
-    //     coords.push(coord)
-    // }
-    // console.log(minCoord, maxCoord)
-    // const mfn = await readSource([[minCoord[0] - 500, minCoord[1] - 500], [maxCoord[0] + 500, maxCoord[1] + 500]])
-    // const allObstructions = mfn.query.Get('pg', null)
-    // mfn.attrib.Set(allObstructions, 'cluster', 1)
-    // mfn.attrib.Set(allObstructions, 'type', 'obstruction')
-    // mfn.attrib.Set(allObstructions, 'obstruction', true)
-
-    // console.log(coords)
-    // const pos = mfn.make.Position(coords)
-    // const pgon = mfn.make.Polygon(pos)
-    // mfn.attrib.Set(pgon, 'type', 'site')
-    // mfn.attrib.Set(pgon, 'cluster', 0)
-
-    // const gen = await generate(mfn, config)
-    // console.log('finished generate')
-
-    // return gen
-
-    // const sim = new SIMFuncs();
-
-    // console.log('starting simulation')
-    // if (type === 'solar') {
-    //     const col_range = [0, 100];
-    //     const result = eval_solar(sim, gen)
-    //     shared.visSimResults(sim, result, 'solar_exposure', col_range);    
-
-    // } else if (type === 'sky') {
-    //     const col_range = [100, 0];
-    //     const result = eval_sky(sim, gen)
-    //     shared.visSimResults(sim, result, 'sky_exposure', col_range);
-
-    // } else if (type === 'uhi') {
-    //     const col_range = [2, 6];
-    //     const result = eval_uhi(sim, gen)
-    //     shared.visSimResults(sim, result, 'uhi', col_range);
-
-    // } else if (type === 'wind') {
-    //     const col_range = [100, 0];
-    
-    //     let closest_stn = {id: 'S24', dist2: null}
-    
-    //     for (const stn of sg_wind_stn_data) {
-    //         const distx = stn.coord[0] - coords[0]
-    //         const disty = stn.coord[1] - coords[1]
-    //         const dist2 = distx * distx + disty * disty
-    //         if (!closest_stn.dist2 || closest_stn.dist2 > dist2) {
-    //             closest_stn.id = stn.id
-    //             closest_stn.dist2 = dist2
-    //         }
-    //     }
-    //     const result = eval_wind(sim, gen, closest_stn.id)
-
-    //     shared.visSimResults(sim, result, 'wind_per', col_range);
-
-    // } else {
-    //     return null
-    // }
-    // console.log('simulation finished')
-
-    // const ground_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'ground');
-
-    // const resultModel = await sim.io.ExportData(ground_pgons, 'sim');
-    // return resultModel
-
+export async function simExecute(latLongs, simInfo) {
 
 
     const minCoord = [99999, 99999];
@@ -380,26 +304,20 @@ export async function simExecute(latLongs, type) {
     const sim = new SIMFuncs();
 
     console.log('starting simulation')
-    if (type === 'solar') {
-        const col_range = [0, 100];
+    if (simInfo.id === 'solar') {
         const result = eval_solar(sim, gen)
-        shared.visSimResults(sim, result, 'solar_exposure', col_range);    
+        shared.visSimResults(sim, result, 'solar_exposure', simInfo);    
 
-    } else if (type === 'sky') {
-        const col_range = [100, 0];
+    } else if (simInfo.id === 'sky') {
         const result = eval_sky(sim, gen)
-        shared.visSimResults(sim, result, 'sky_exposure', col_range);
+        shared.visSimResults(sim, result, 'sky_exposure', simInfo);
 
-    } else if (type === 'uhi') {
-        const col_range = [2, 6];
+    } else if (simInfo.id === 'uhi') {
         const result = eval_uhi(sim, gen)
-        shared.visSimResults(sim, result, 'uhi', col_range);
+        shared.visSimResults(sim, result, 'uhi', simInfo);
 
-    } else if (type === 'wind') {
-        const col_range = [100, 0];
-    
+    } else if (simInfo.id === 'wind') {
         let closest_stn = {id: 'S24', dist2: null}
-    
         for (const stn of sg_wind_stn_data) {
             const distx = stn.coord[0] - coords[0]
             const disty = stn.coord[1] - coords[1]
@@ -411,7 +329,7 @@ export async function simExecute(latLongs, type) {
         }
         const result = eval_wind(sim, gen, closest_stn.id)
 
-        shared.visSimResults(sim, result, 'wind_per', col_range);
+        shared.visSimResults(sim, result, 'wind_per', simInfo);
 
     } else {
         return null
@@ -476,7 +394,7 @@ export async function visResult(latLongs, simulation, result) {
     // }
     // create colors for polygons
     sim.attrib.Set(sens_pgons, 'data', result, 'many_values');
-    sim.visualize.Gradient(sens_pgons, 'data', simulation.col_range, ['green','yellow','red']);
+    sim.visualize.Gradient(sens_pgons, 'data', simulation.col_range, simulation.col_scale);
 
     sim.modify.Move(sens_pgons, [-coords[0][0], -coords[0][1], 0])
     sim.edit.Delete(sens_pgons, 'keep_selected')

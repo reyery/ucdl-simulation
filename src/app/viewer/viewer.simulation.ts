@@ -1,11 +1,8 @@
-import { simExecute, simConvert, visResult} from "./simulation-js/sim_execute"
+import { visResult} from "./simulation-js/sim_execute"
 import { raster_to_sim, raster_to_sim_sky } from "./simulation-js/sim_convert_py_result"
-import { TIFFParser } from './TIFFParser';
 import * as itowns from 'itowns';
 import * as THREE from "three";
-import { TIFFLoader } from './TIFFLoader';
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
-import * as UTIF from 'utif';
 import { updateHUD } from "./viewer.getresult";
 
 export async function runSimulation(view, polygon, simulation) {
@@ -97,9 +94,6 @@ async function runPYSimulation(view, polygon, simulation) {
   const coords = polygon.getCoordinates()
   if (!coords || coords.length === 0) { return [null, null] }
 
-  console.log(JSON.stringify({
-    bounds: coords[0]
-  }))
   const response = await fetch('http://172.23.93.70:5000/' + simulation.id, {
     method: 'POST',
     headers: {
@@ -120,7 +114,6 @@ async function runPYSimulation(view, polygon, simulation) {
 
   const geom = await addGeom(result, null, 1) as any
   threeJSGroup.add(geom)
-
 
   const camTarget = new itowns.Coordinates('EPSG:4326', bottomLeft[0], bottomLeft[1], 1);
   const cameraTargetPosition = camTarget.as(view.referenceCrs);

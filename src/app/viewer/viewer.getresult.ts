@@ -2,6 +2,8 @@ import * as itowns from 'itowns';
 import * as THREE from "three";
 import { BUILDING_TILES_URL } from './viewer.const';
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
+import { scale as chromaScale } from 'chroma-js';
+
 const sim = new SIMFuncs()
 
 
@@ -40,30 +42,11 @@ export async function getResultLayer(view, simulation, itown_layers) {
             });
 
             const range = simulation.col_range[1]
-            // function pyColor(properties) {
-            //     const val = properties.value
-            //     const r25 = range / 4
-            //     const r50 = range / 2
-            //     const r75 = r25 * 3
-            //     if (val <= r25) {
-            //         return new THREE.Color(`rgb(0, ${Math.round(val * 255 / r25)}, 255)`);
-            //     } else if (val <= r50) {
-            //         return new THREE.Color(`rgb(0, ${128 + Math.round((r50 - val) * 127 / r25)}, ${Math.round((r50 - val) * 255 / r25)})`);
-            //     } else if (val <= r75) {
-            //         return new THREE.Color(`rgb(${Math.round((val - r50) * 255 / r25)}, ${128 + Math.round((val - r50) * 127 / r25)}, 0)`);
-            //     } else {
-            //         return new THREE.Color(`rgb(255, ${Math.round((range - val) * 255 / r25)}, 0)`);
-            //     }
-            // }
-            
+
+            const colorScale = chromaScale(simulation.col_scale).domain(simulation.col_range);
             function pyColor(properties) {
-                const val = properties.value
-                const r50 = range / 2
-                if (val <= r50) {
-                    return new THREE.Color(`rgb(${Math.round(val * 255 / r50)}, ${200 + Math.round(val * 55 / r50)}, 0)`);
-                } else {
-                    return new THREE.Color(`rgb(255, ${Math.round((range - val) * 200 / r50)}, 0)`);
-                }
+                //@ts-ignore
+                return new THREE.Color(colorScale(properties.value).num());
             }
             
             itown_layers[simulation.id] = new itowns.FeatureGeometryLayer('resultLayer_' + simulation.id, {
@@ -96,7 +79,7 @@ export async function removeResultLayer(view) {
     }
 }
 
-export function updateHUD({ sim_name, col_range, unit, extra_info, desc }: { sim_name: string, col_range: number[], unit: string, extra_info?: string , desc?: string}): string {
+export function updateHUD({ sim_name, col_range, col_scale, unit, extra_info, desc }: any): string {
     let hud_msg = '<div style="line-height:1.1; font-weight: 500; font-size: large;">'
     hud_msg += '<h3>' + sim_name + (desc? (' ' + desc) : '' )+ '</h3>';
     hud_msg += '</div>'
@@ -109,12 +92,7 @@ export function updateHUD({ sim_name, col_range, unit, extra_info, desc }: { sim
         const val_sf = sim.inl.sigFig(val, 2);
         leg_labels.push(val_sf + ' ' + unit);
     }
-    let hud_leg
-    if (sim_name === 'Urban Heat Island Intensity') {
-        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, ['white','#EB6E00']);
-    } else {
-        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, ['green','yellow','red']);
-    }
+    const hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, col_scale);
     // Heads Up Display
     const hud_elm = document.getElementById('hud') as HTMLDivElement;
     if (hud_elm) {
