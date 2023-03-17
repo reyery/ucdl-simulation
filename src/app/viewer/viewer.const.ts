@@ -3,6 +3,8 @@ export const LONGLAT = [ 103.778329, 1.298759];
 export const DEFAULT_LONGLAT = [103.854382, 1.295460];
 // export const DEFAULT_LONGLAT = [4.818, 45.7354]
 export const BUILDING_TILES_URL = 'http://172.16.164.199:8090/geoserver/sg_sim/wfs?'
+export const JS_SERVER = 'http://172.16.164.199:5202/'
+export const PY_SERVER = 'http://172.23.93.70:5000/'
 export const RESULT_URL = 'assets/result_full/'
 export const SIM_DATA = {
     none: {
@@ -83,4 +85,3 @@ export const SIM_DATA = {
         building_type: 'extruded'
     },
 }
-// curl -X POST -H "application/json" -d '{"bounds":[[103.85144229891965,1.2959896056663212],[103.85348077777098,1.298478057686836],[103.85779376986693,1.295110066005023],[103.85571237567136,1.2918278787221453],[103.85144229891965,1.2959896056663212]]}' http://172.23.93.70:5000/uwind
