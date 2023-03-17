@@ -4,6 +4,7 @@ import * as itowns from 'itowns';
 import * as THREE from "three";
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
 import { updateHUD } from "./viewer.getresult";
+import { JS_SERVER, PY_SERVER } from "./viewer.const";
 
 export async function runSimulation(view, polygon, simulation) {
   let extraInfo, colorRange
@@ -50,7 +51,7 @@ async function runJSSimulation(view, polygon, simulation) {
   if (!coords || coords.length === 0) { return }
 
   const session = 'r' + (new Date()).getTime()
-  const response = await fetch('http://172.16.164.199:5201/' + simulation.id, {
+  const response = await fetch(JS_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -94,7 +95,7 @@ async function runPYSimulation(view, polygon, simulation) {
   const coords = polygon.getCoordinates()
   if (!coords || coords.length === 0) { return [null, null] }
 
-  const response = await fetch('http://172.23.93.70:5000/' + simulation.id, {
+  const response = await fetch(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -230,7 +231,7 @@ async function sky(view, polygon, simulation) {
   console.log(JSON.stringify({
     bounds: coords[0]
   }))
-  const response = await fetch('http://172.23.93.70:5000/' + simulation.id, {
+  const response = await fetch(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
