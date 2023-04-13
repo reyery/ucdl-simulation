@@ -4,7 +4,7 @@ export const DEFAULT_LONGLAT = [103.854382, 1.295460];
 // export const DEFAULT_LONGLAT = [4.818, 45.7354]
 export const BUILDING_TILES_URL = 'http://172.16.164.199:8090/geoserver/sg_sim/wfs?'
 export const JS_SERVER = 'http://172.16.164.199:5202/'
-export const PY_SERVER = 'http://172.23.93.70:5000/'
+export const PY_SERVER = 'http://172.26.51.153:5000/'
 export const RESULT_URL = 'assets/result_full/'
 export const SIM_DATA = {
     none: {
