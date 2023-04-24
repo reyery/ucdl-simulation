@@ -218,3 +218,114 @@ export function raster_to_sim_sky(bounds, data, info) {
 
     return [sim, projWGS84.inverse(extent2.bottom_left), info.col_range, canvas]
 }
+
+export function eval_to_sim(bounds, data, info) {
+    const projObj = _createProjection(data.proj)
+    
+    const extentSplit = data.extent.split(' ')
+    const extent = {
+        left: Number(extentSplit[0]),
+        right: Number(extentSplit[2]),
+        top: Number(extentSplit[3]),
+        bottom: Number(extentSplit[1]),
+    }
+    const extent2 = {
+        bottom_left: projObj.forward([extent.left, extent.bottom]),
+        top_right: projObj.forward([extent.right, extent.top]),
+    }
+    const width = (extent2.top_right[0] - extent2.bottom_left[0]) / data.data[0].length
+    const height = (extent2.top_right[1] - extent2.bottom_left[1]) / data.data.length
+
+    console.log('data.extent', data.extent)
+
+    const sim = new SIMFuncs()
+
+    // const bound_coords = [
+    //     [0, 0, 0],
+    //     [extent2.top_right[0] - extent2.bottom_left[0], 0, 0],
+    //     [extent2.top_right[0] - extent2.bottom_left[0], extent2.top_right[1] - extent2.bottom_left[1], 0],
+    //     [0, extent2.top_right[1] - extent2.bottom_left[1], 0]
+    // ]
+    // console.log(bound_coords)
+    const bound_coords = []
+    for (const latlong of bounds) {
+        const coord = [ ...projWGS84.forward(latlong), 0]
+        coord[0] -= extent2.bottom_left[0]
+        coord[1] -= extent2.bottom_left[1]
+        bound_coords.push(coord)
+    }
+    const bound_ps = sim.make.Position(bound_coords)
+    const bound_pgon = sim.make.Polygon(bound_ps)
+    const normal = sim.calc.Normal(bound_pgon, 1)
+    if (normal[2] < 0) {
+        sim.edit.Reverse(bound_pgon)
+    }
+
+    const canvas = createCanvas(data.data[0].length * 2, data.data.length * 2);
+    const context = canvas.getContext("2d");
+
+    let boundShape = new Shape([bound_coords.map(coord => {return {X: coord[0], Y: coord[1]}})])
+    if (boundShape.totalArea() < 0) {
+        boundShape = new Shape([bound_coords.map(coord => {return {X: coord[0], Y: coord[1]}}).reverse()])
+    }
+    console.log(boundShape)
+    console.log(boundShape.totalArea())
+    const values = []
+    const cornerCheck = {}
+    // const imgDataArr = []
+
+    const colorScale = chromaScale(info.col_scale).domain(info.col_range);
+    function pyColor(properties) {
+        const val = properties.value
+        //@ts-ignore
+        const colors = colorScale(val).num();
+        console.log(colors)
+        return new THREE.Color(colors);
+    }
+
+    for (let i = 0; i < data.data.length; i++) {
+        const r = data.data.length - 1 - i
+        for (let j = 0; j < data.data[i].length; j++) {
+            let check = false
+            for (let x = 0; x < 2; x++) {
+                for (let y = 0; y < 2; y++) {
+                    const idx = (j + x) + '_' + (r + y)
+                    if (cornerCheck[idx]) {
+                        check = true
+                        break
+                    } else if (cornerCheck[idx] === false) {
+                        continue
+                    }
+                    cornerCheck[idx] = boundShape.pointInShape({ X: width * (j + x), Y: height * (r + y) }, false, false)
+                    if (cornerCheck[idx]) {
+                        check = true
+                        break
+                    }
+                }
+                if (check) { break; }
+            }
+            if (check) {
+                const v = data.data[i][j]
+                values.push(v)
+                context.fillStyle = colorScale(v).css();
+                context.fillRect(j * 2 - 0.5, i * 2 - 0.5, 2, 2);
+            }
+        }
+    }
+
+    console.log('bound_coords', bound_coords)
+
+    const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
+    const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
+    sim.attrib.Set(null, 'extra_info', extra_info)
+
+
+    // console.log(canvas,  canvas.createPNGStream)
+    // const a = document.getElementById('test_canvas')
+    // if (a.children.length > 0) {
+    //     a.removeChild(a.firstElementChild);
+    // }
+    // a.appendChild(canvas)
+
+    return [sim, projWGS84.inverse(extent2.bottom_left), info.col_range, canvas]
+}

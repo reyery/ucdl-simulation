@@ -360,7 +360,7 @@ export async function simConvert(latLongs) {
     return sim
 }
 
-export async function visResult(latLongs, simulation, result) {
+export async function visResult(latLongs, simulation, result, extraGeom = null) {
 
     const minCoord = [99999, 99999];
     const maxCoord = [-99999, -99999];
@@ -388,7 +388,7 @@ export async function visResult(latLongs, simulation, result) {
     
     const sens_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'ground');
     console.log('sens_pgons', sens_pgons, sens_pgons.length)
-    console.log('result', result, result.length)
+    console.log('result', result)
     // for (let i = 0; i < sens_pgons.length; i ++) {
     //     sim.attrib.Set(sens_pgons[i], 'data', result[i]);
     // }
@@ -396,8 +396,18 @@ export async function visResult(latLongs, simulation, result) {
     sim.attrib.Set(sens_pgons, 'data', result, 'many_values');
     sim.visualize.Gradient(sens_pgons, 'data', simulation.col_range, simulation.col_scale);
 
-    sim.modify.Move(sens_pgons, [-coords[0][0], -coords[0][1], 0])
-    sim.edit.Delete(sens_pgons, 'keep_selected')
+    let allPgons = sens_pgons
+    if (extraGeom && extraGeom.length > 0) {
+        for (const geom of extraGeom) {
+            const ps = sim.make.Position(geom.coord)
+            const pg = sim.make.Polygon(ps)
+            const pgons = sim.make.Extrude(pg, geom.height, 1, 'quads')
+            allPgons = allPgons.concat(pgons)
+        }
+    }
+
+    sim.modify.Move(allPgons, [-coords[0][0], -coords[0][1], 0])
+    sim.edit.Delete(allPgons, 'keep_selected')
 
     return sim
 }

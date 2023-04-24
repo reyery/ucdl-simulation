@@ -3,7 +3,7 @@ import {SIMFuncs} from "@design-automation/mobius-sim-funcs";
 const GRID_SIZE = 10;
 // =================================================================================================
 // execute the modle generation
-export async function execute(sim, config) {
+export async function execute(sim, config, gridSize = GRID_SIZE) {
     // // initiate the function class
     // const sim = new SIMFuncs();
     // // import model data
@@ -24,7 +24,7 @@ export async function execute(sim, config) {
     // get all pg
     const pgons = sim.query.Get('pg', null);
     // update attributes and colours
-    processSite(sim, pgons);
+    processSite(sim, pgons, gridSize);
     processFacade(sim, pgons);
     processObstructions(sim, pgons);
     processWalkways(sim, pgons);
@@ -34,7 +34,7 @@ export async function execute(sim, config) {
     return new_model_data;
 }
 // -------------------------------------------------------------------------------------------------
-export function processSite(sim, pgons) {
+export function processSite(sim, pgons, gridSize) {
     // get the site polygon
     const site = sim.query.Filter(pgons, 'type', '==', 'site');
     const site_off = sim.poly2d.OffsetMitre(site, 0, 1, 'square_end');
@@ -46,9 +46,9 @@ export function processSite(sim, pgons) {
     const bases_off = sim.poly2d.OffsetMitre(bases, 0, 1, 'square_end');
     // create a grid that covers the whole site
     const [cen, _, __, size] = sim.calc.BBox(site);
-    const num_edges = [Math.ceil(size[0]/GRID_SIZE), Math.ceil(size[1]/GRID_SIZE)];
+    const num_edges = [Math.ceil(size[0]/gridSize), Math.ceil(size[1]/gridSize)];
     const grid_posis = sim.pattern.Grid([cen[0], cen[1], 0], 
-        [num_edges[0] * GRID_SIZE, num_edges[1] * GRID_SIZE],
+        [num_edges[0] * gridSize, num_edges[1] * gridSize],
         [num_edges[0] + 1,         num_edges[1] + 1], 'quads');
     const grid_pgons0 = sim.make.Polygon(grid_posis);
     // intersect the grid with the site
