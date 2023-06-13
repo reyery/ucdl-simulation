@@ -6,23 +6,6 @@
 /out-tsc
 /bazel-out
 
-src/assets/
-src/assets/_shp_
-src/assets/models
-src/assets/results
-src/assets/result_all
-src/assets/result_full
-src/assets/result_sky
-src/assets/result_solar
-src/assets/result_solar_old
-src/assets/result_uhi
-src/assets/result_wind
-src/assets/result_img_sky
-src/assets/result_img_solar
-src/assets/result_img_uhi
-src/assets/result_img_wind
-src/assets/simdata
-src/assets/old
 
 # Node
 /node_modules

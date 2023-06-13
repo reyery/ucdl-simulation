@@ -9,6 +9,7 @@ export const BUILDING_TILES_URL = 'http://172.16.164.199:8090/geoserver/sg_sim/w
 export const JS_SERVER = 'http://172.16.164.199:5202/'
 export const PY_SERVER = 'http://172.26.51.153:5000/'
 export const RESULT_URL = 'assets/result_full/'
+export const MAX_AP_LAYERS = 25
 export const SIM_DATA = {
     none: {
         id: 'none',
@@ -26,13 +27,13 @@ export const SIM_DATA = {
         display_name: 'Urban Heat Island Intensity',
         sim_name: 'Urban Heat Island Intensity',
         desc: '(measured by SVF)',
-        type: 'py',
+        type: 'js',
         maptype: 'tile',
         col_range: [0, 1],
         col_scale: ['#EB6E00', 'white'],
         unit: '',
         building_type: 'extruded',
-        grid_size: 1
+        grid_size: 10
     },
     // uhi: {
     //     id: 'uhi',
@@ -53,7 +54,8 @@ export const SIM_DATA = {
         col_range: [0, 0.75],
         col_scale: ['green','yellow','red'],
         unit: '',
-        building_type: 'flat'
+        building_type: 'flat',
+        grid_size: 200,
     },
     wind: {
         id: 'wind',
@@ -64,7 +66,8 @@ export const SIM_DATA = {
         col_range: [0, 100],
         col_scale: ['red','yellow','green'],
         unit: '%',
-        building_type: 'extruded'
+        building_type: 'extruded',
+        grid_size: 10,
     },
     ah: {
         id: 'ah',
@@ -75,7 +78,24 @@ export const SIM_DATA = {
         col_range: [0, 0.33],
         col_scale: ['green','yellow','red'],
         unit: '',
-        building_type: 'flat'
+        building_type: 'flat',
+        grid_size: 200,
+    },
+    ap: {
+        id: 'ap',
+        display_name: 'Air Pollutant',
+        sim_name: 'Air Pollutant',
+        type: 'py',
+        maptype: 'special',
+        col_range: [0, 1],
+        col_range1: [0, 0.0375],
+        col_scale: ['#003200','#dddd30','red'],
+        unit: '',
+        building_type: 'flat',
+        grid_size: 200,
+        otherInfo: {
+            height: 100
+        }
     },
     solar: {
         id: 'solar',
@@ -86,12 +106,15 @@ export const SIM_DATA = {
         col_range: [0, 100],
         col_scale: ['green','yellow','red'],
         unit: '%',
-        building_type: 'extruded'
+        building_type: 'extruded',
+        grid_size: 10,
     },
 }
 
 export const SIM_DATA_UPLOAD = {
     none: SIM_DATA.none,
+    sky: SIM_DATA.sky,
+    // uwind: SIM_DATA.uwind,
     wind: SIM_DATA.wind,
     solar: SIM_DATA.solar,
 }

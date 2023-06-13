@@ -207,6 +207,45 @@ function eval_wind(sim, model_data, weather_stn='S24') {
         settings: 'Max distance: ' + settings.RADIUS + ' m'
     };  
 }
+function vis_wind_pgon(sim, coord) {
+    console.log(coord)
+    let closest_stn = null;
+    let closest_dist = null;
+    for (const stn of sg_wind_stn_data) {
+        const dist = Math.pow(stn.coord[0] - coord[0], 2 ) + Math.pow(stn.coord[1] - coord[1], 2 )
+        if (!closest_dist || dist < closest_dist) {
+            closest_dist = dist
+            closest_stn = stn
+        }
+    }
+    // console.log('closest_stn', closest_stn)
+    console.log('closest_stn_wind', sg_wind[closest_stn.id])
+    
+    const windRange = sim.attrib.Get(null, 'wind_range') || [0, 0]
+    const windrosePgons = []
+    for (let i = 0; i < sg_wind[closest_stn.id].length; i++) {
+        const windVal = sg_wind[closest_stn.id][i]
+        // const grid = sim.pattern.Rectangle([windVal * 25 + 0.3, 0, 0], windVal * 50, 0.1)
+        // const pg = sim.make.Polygon(grid)
+        // const edges = sim.query.Get('_e', pg)
+        // const cen = sim.calc.Centroid(edges[1], 'ps_average')
+        // sim.modify.Scale(edges[1], cen, windVal * 200)
+        // sim.modify.Rotate(pg, [[0,0,0], [1,0,0],[0,1,0]], Math.PI / 2 - (Math.PI / 8) * i)
+        // sim.modify.Move(pg, [coord[0], coord[1], 0])
+        const ps = sim.make.Position([[0, 0, 0], [0, windVal * 200, 0], [0, windVal * 200, 0]])
+        sim.modify.Rotate(ps[1], [[0,0,0], [1,0,0],[0,1,0]], - Math.PI / 17)
+        sim.modify.Rotate(ps[2], [[0,0,0], [1,0,0],[0,1,0]], Math.PI / 17)
+        const pg = sim.make.Polygon(ps)
+        sim.modify.Rotate(pg, [[0,0,0], [1,0,0],[0,1,0]],  - i * Math.PI / 8)
+        sim.modify.Move(pg, [coord[0], coord[1], 50])
+        sim.visualize.Color(pg, sim.inl.colFromStr('green'));
+        sim.attrib.Set(pg, 'value', windVal)
+        if (windRange[1] < windVal) { windRange[1] = windVal }
+        windrosePgons.push(pg)
+    }
+    sim.attrib.Set(null, 'wind_range', windRange)
+    return windrosePgons
+}
 
 
 async function readSource(bounds) {
@@ -389,6 +428,14 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     const sens_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'ground');
     console.log('sens_pgons', sens_pgons, sens_pgons.length)
     console.log('result', result)
+    if (simulation.id === 'sky') {
+        for (let i = 0; i < result.length; i++) {
+            result[i] = result[i] / 100
+        }
+        const UHII = Math.round((-6.51 * (result.reduce((partialSum, a) => partialSum + a, 0)) / result.length + 7.13) * 10) / 10
+        const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
+        sim.attrib.Set(null, 'extra_info', extra_info)
+    } 
     // for (let i = 0; i < sens_pgons.length; i ++) {
     //     sim.attrib.Set(sens_pgons[i], 'data', result[i]);
     // }
@@ -405,9 +452,15 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
             allPgons = allPgons.concat(pgons)
         }
     }
-
-    sim.modify.Move(allPgons, [-coords[0][0], -coords[0][1], 0])
     sim.edit.Delete(allPgons, 'keep_selected')
+    // if (simulation.id === 'wind') {
+    //     vis_wind_pgon(sim, [minCoord[0], minCoord[1]])
+    //     vis_wind_pgon(sim, [minCoord[0], maxCoord[1]])
+    //     vis_wind_pgon(sim, [maxCoord[0], maxCoord[1]])
+    //     vis_wind_pgon(sim, [maxCoord[0], minCoord[1]])
+    //     allPgons = sim.query.Get('pg', null)
+    // }
+    sim.modify.Move(allPgons, [-coords[0][0], -coords[0][1], 0])
 
     return sim
 }

@@ -1,7 +1,7 @@
-<div id="isLoadingPanel" class="fixed top-0 left-0 z-[1000] w-[100vw] h-[100vh] pointer-events-none hidden">
-    <div class="flex flex-col flex-wrap content-center justify-center w-full h-full bg-white opacity-50 cursor-default" (mousedown)="mouseEvent($event)">
+<div id="isLoadingPanel" class="fixed top-0 left-0 z-[1000] w-[100vw] h-[100vh] hidden">
+    <div class="flex flex-col flex-wrap content-center justify-center w-full h-full bg-white bg-opacity-50 cursor-default pointer-events-none" (mousedown)="mouseEvent($event)">
         <mat-spinner></mat-spinner>
         <br/>
-        <p id="progress_text" class="text-center pointer-events-none"></p>
+        <p id="progress_text" class="text-center"></p>
     </div>
 </div>

@@ -3,9 +3,10 @@ import { eval_to_sim } from "../simulation-js/sim_convert_py_result"
 import * as itowns from 'itowns';
 import * as THREE from "three";
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
-import { updateHUD } from "./viewer.getresult";
+import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
 import { addGeom, addViewGeom } from "./viewer.threejs";
+import GeoJSON from 'ol/format/GeoJSON.js';
 
 export async function runSimulation(view, simData, simulation) {
   let extraInfo, colorRange
@@ -52,79 +53,64 @@ async function runJSSimulation(view, simData, simulation) {
   // eval_to_sim()
   
   const resultSIM = await visResult(simData.simBoundary, simulation, resp.result, resp.surrounding)
-
-  
-  // const bottomLeft = simData.simBoundary.reduce((minCoord, b) => [Math.min(minCoord[0], b[0]), Math.min(minCoord[1], b[1])], [99999, 99999])
-  // console.log(bottomLeft)
+  console.log('simulation.id', simulation.id)
   await addViewGeom(view, resultSIM, simData.simBoundary[0], 'simulation_result')
-  // console.log('resultSIM', resultSIM)
-  // const threeJSGroup = new THREE.Group();
-  // threeJSGroup.name = 'simulation_result';
-
-  // const geom = await addGeom(resultSIM)
-  // threeJSGroup.add(geom)
-
-  // const camTarget = new itowns.Coordinates('EPSG:4326', simData.extent[0], simData.extent[1], 0);
-  // const cameraTargetPosition = camTarget.as(view.referenceCrs);
-
-  // threeJSGroup.position.copy(cameraTargetPosition);
-
-  // itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
-  // threeJSGroup.updateMatrixWorld(true);
-
-  // view.scene.add(threeJSGroup);
-  // view.notifyChange();
-
+  if (simulation.id === 'wind') {
+    updateWindHUD(resp.wind_stns)
+  }
   const extraInfo = resultSIM.attrib.Get(null, 'extra_info')
   return extraInfo
 
 }
 
+async function simToGeoJSON(inputModel: string) {
+  console.log('sim data:',inputModel)
+  const sim = new SIMFuncs()
+  await sim.io.ImportData(inputModel, 'sim' as any);
+  const allPgons = sim.query.Get('pg' as any, null);
+  const expPgons = [];
+  for (const pgon of allPgons) {
+    const norm = sim.calc.Normal(pgon, 10000)
+    if (Math.round(norm[2]) <= 0) { continue; }
+    console.log('pgon', pgon)
+    expPgons.push(pgon)
+    const ps = sim.query.Get('ps' as any, pgon)
+    const zCoords = sim.attrib.Get(ps, 'xyz').map(xyz => xyz[2])
+    sim.attrib.Set(pgon, 'height', Math.max(...zCoords), 'one_value' as any)
+  }
+  sim.edit.Delete(expPgons, 'keep_selected' as any)
+  const geoJSON = await sim.io.ExportData(null, 'geojson' as any)
+  return JSON.stringify(JSON.parse(geoJSON))
+}
+
 async function runPYSimulation(view, simData, simulation) {
-  // if (simulation.id === 'sky') {
-  //   return sky(view, polygon, simulation)
+  if (!simData) { return [null, null] }
+  const session = 'r' + (new Date()).getTime()
+
+  const geojsonStr = await simToGeoJSON(simData.data)
+
+  console.log('geojsonStr', geojsonStr)
+  // const request = {
+  //   extent: simData.extent,
+  //   data: simData.data,
+  //   simBoundary: simData.simBoundary ? simData.simBoundary : null,
+  //   featureBoundary: simData.featureBoundary ? simData.featureBoundary : null,
+  //   gridSize: simulation.grid_size || 200, 
+  //   session: session
   // }
-
-  // const coords = polygon.getCoordinates()
-  // if (!coords || coords.length === 0) { return [null, null] }
-
-  // const response = await fetch(PY_SERVER + simulation.id, {
+  // if (simData.simBoundary)
+  // console.log('request:', request)
+  // const response = await fetch(PY_SERVER + simulation.id + '_upload', {
   //   method: 'POST',
   //   headers: {
   //     'Content-Type': 'application/json'
   //   },
-  //   body: JSON.stringify({
-  //     bounds: coords[0]
-  //   })
+  //   body: JSON.stringify(request)
   // });
   // const resp = await response.json()
-  // console.log('response', response)
-  // console.log('resp', resp)
-  // const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
-  // const extra_info = result.attrib.Get(null, 'extra_info')
 
-  // const threeJSGroup = new THREE.Group();
-  // threeJSGroup.name = 'simulation_result';
+  // console.log(resp.result)
 
-  // const geom = await addGeom(result, null, 1) as any
-  // threeJSGroup.add(geom)
-
-  // const camTarget = new itowns.Coordinates('EPSG:4326', bottomLeft[0], bottomLeft[1], 1);
-  // const cameraTargetPosition = camTarget.as(view.referenceCrs);
-
-  // threeJSGroup.position.copy(cameraTargetPosition);
-
-  // itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
-  // threeJSGroup.updateMatrixWorld(true);
-
-  // // current_sim_div = document.getElementById('current_sim') as HTMLDivElement
-  // // if (current_sim_div && current_sim_div.innerHTML !== result_type) {
-  // //   return false;
-  // // }
-
-  // view.scene.add(threeJSGroup);
-  // view.notifyChange();
-  // return [colRange, extra_info]
   return [null, null]
 }
 

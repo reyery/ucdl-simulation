@@ -1,42 +1,16 @@
-import * as itowns from 'itowns';
 import * as THREE from 'three';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader';
-// import { ColladaLoader } from 'three/addons/loaders/ColladaLoader.js';
+import { XMLParser } from "fast-xml-parser"; 
 
-import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, LONGLAT, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA } from './viewer.const';
-import { getResultLayer, removeResultLayer, updateHUD } from './viewer.getresult';
-import { runSimulation as runDrawSim } from './viewer.simulation';
-import { runSimulation as runUploadSim } from './viewer.simulationUpload';
-import proj4 from 'proj4';
+
 import * as shapefile from 'shapefile';
+import { WGS84_SIM_PROJ } from './viewer.const';
 
-import Map from 'ol/Map.js';
-import TileLayer from 'ol/layer/Tile.js';
-import TileWMS from 'ol/source/TileWMS.js';
-import View from 'ol/View.js';
-import XYZ from 'ol/source/XYZ';
-import Draw from 'ol/interaction/Draw.js';
-import Graticule from 'ol/layer/Graticule.js';
-import Stroke from 'ol/style/Stroke.js';
-import { getArea } from 'ol/sphere.js';
-import { Feature, Image as OlImage, Overlay } from 'ol';
-import CircleStyle from 'ol/style/Circle.js';
-import MousePosition from 'ol/control/MousePosition.js';
-import { createStringXY } from 'ol/coordinate.js';
-import { defaults as defaultControls } from 'ol/control.js';
+import { Feature } from 'ol';
 
-import { Modify, Select, Translate } from 'ol/interaction.js';
-import { useGeographic } from 'ol/proj.js';
-import VectorSource from 'ol/source/Vector';
-import VectorLayer from 'ol/layer/Vector';
-import { Polygon } from 'ol/geom';
-import Style from 'ol/style/Style';
-import Fill from 'ol/style/Fill';
 import { SIMFuncs } from '@design-automation/mobius-sim-funcs';
-import { addGeom, addViewGeom, removeSimulation } from './viewer.threejs';
-import { add as addCoord } from 'ol/coordinate';
-import ImageStyle from 'ol/style/Image';
 import Shape from '@doodle3d/clipper-js';
+import { Polygon } from 'ol/geom';
 
 export async function readMassingFiles(files, currentLatLong: number[]) {
   const fileTypeResult = await checkUploadedFilesType(files)
@@ -53,7 +27,7 @@ export async function readMassingFiles(files, currentLatLong: number[]) {
   }
   return null
 }
-async function checkUploadedFilesType(files: FileList): Promise<{status: boolean, type: string, shp?: ArrayBuffer, dbf?: ArrayBuffer, file?: File}> {
+async function checkUploadedFilesType(files: FileList): Promise<{ status: boolean, type: string, shp?: ArrayBuffer, dbf?: ArrayBuffer, file?: File }> {
   let fileType = 'unidentified';
   const shpCheck = [false, false]
   const shpFile: ArrayBuffer[] = [null, null]
@@ -168,19 +142,35 @@ async function readDAE(file, currentLatLong: number[]) {
   // const parsedCollada = colladaParser.parse(fileData)
   // console.log(parsedCollada)
   const loader = new ColladaLoader();
+
+  const fileText = await file.text()
+  const unit = {};
+  try {
+    const unitStr = fileText.split('<unit')[1].split('/>')[0].trim()
+    for (const attrSet of unitStr.split(' ')) {
+      const attrSplit = attrSet.split('=')
+      unit[attrSplit[0]] = attrSplit[1].replace(/\"|\'/g, '').toLowerCase()
+    }
+  } catch (ex) {}
+  
+  // const parsedCollada = ParseCollada(fileText)
+  // console.log('parsedCollada', parsedCollada)
+
   const fileURI = window.URL.createObjectURL(file)
   // const fileData = await file.arrayBuffer()
   const itownSim = new SIMFuncs()
   const fileData = await new Promise(resolve => {
     let clipperShape
     loader.load(fileURI, function (collada) {
-      const pgonsCoords = getThreeGeomCoords(collada.scene)
-
+      const pgonsCoords = getThreeGeomCoords(collada.scene, unit && unit['name'])
+      console.log('data coords:', pgonsCoords)
       for (const pgonC of pgonsCoords) {
         const pos = itownSim.make.Position(pgonC as any)
         const pgon = itownSim.make.Polygon(pos)
         const norm = itownSim.calc.Normal(pgon, 1)
-        if (norm[2] > 0) {
+        const vertNorm = Math.round(norm[2] * 100)
+        if (vertNorm > 0) {
+          if (vertNorm === 100 && Math.round(pgonC[0][2] * 100) === 0) { continue }
           if (clipperShape) {
             const projectedShape = new Shape([pgonC.map(x => { return { X: x[0] * 100000, Y: x[1] * 100000 } })])
             clipperShape = clipperShape.union(projectedShape)
@@ -205,17 +195,13 @@ async function readDAE(file, currentLatLong: number[]) {
           geometry: new Polygon([pathCoords]),
         }))
       }
-      console.log('currentLatLong', currentLatLong)
-      console.log('extent', extent)
-      console.log('currentLatLong[0] - extent[0], currentLatLong[1] - extent[1]', currentLatLong[0] - extent[0], currentLatLong[1] - extent[1])
       
       const translation = [currentLatLong[0] - extent[0], currentLatLong[1] - extent[1]]
       for (const feature of features) {
         feature.getGeometry().translate(translation[0], translation[1])
       }
-      const extentSimCoord =  WGS84_SIM_PROJ.forward([extent[0], extent[1]])
-      const currentSimCoord =  WGS84_SIM_PROJ.forward(currentLatLong)
-      console.log('extentSimCoord, currentSimCoord', extentSimCoord, currentSimCoord)
+      const extentSimCoord = WGS84_SIM_PROJ.forward([extent[0], extent[1]])
+      const currentSimCoord = WGS84_SIM_PROJ.forward(currentLatLong)
       itownSim.modify.Move(itownSim.query.Get('pg' as any, null), [currentSimCoord[0] - extentSimCoord[0], currentSimCoord[1] - extentSimCoord[1], 0])
       extent[2] = extent[2] + currentLatLong[0] - extent[0]
       extent[3] = extent[3] + currentLatLong[1] - extent[1]
@@ -227,9 +213,6 @@ async function readDAE(file, currentLatLong: number[]) {
   }).catch(error => console.log('promise error', error))
   const oplFeatures = fileData[0]
   const oplExtent: number[] = fileData[1]
-  for (const feature of oplFeatures) {
-    console.log(feature.getGeometry().getCoordinates())
-  }
 
   const allPgons = itownSim.query.Get('pg' as any, null)
   const walls = [];
@@ -251,8 +234,6 @@ async function readDAE(file, currentLatLong: number[]) {
 
   const simExtent = WGS84_SIM_PROJ.forward([oplExtent[0], oplExtent[1]])
   itownSim.modify.Move(allPgons, [-simExtent[0], -simExtent[1], 0])
-
-  console.log(oplExtent)
   // return null
   return {
     uploadedGeomData: {
@@ -279,31 +260,41 @@ async function readDAE(file, currentLatLong: number[]) {
 
 }
 
-function getThreeGeomCoords(threeObj): number[][][] {
-  if (threeObj.type === 'Group') {
-    let pgons = []
-    for (const obj of threeObj.children) {
-      pgons = pgons.concat(getThreeGeomCoords(obj))
-    }
-    return pgons
-  } else if (threeObj.type === 'Mesh') {
-    console.log('threeObj',threeObj)
-    const gp = threeObj.geometry.attributes.position;
-    const pgons: number[][][] = [];
-    let pgonPos: number[][] = [];
-    let pgonVertCount = 0
-    for (let i = 0; i < gp.count; i++) {
-      const p = new THREE.Vector3().fromBufferAttribute(gp, i); // set p from `position`
-      const coord = [p.x, p.y, p.z / 39.37]
-      pgonPos.push(coord);
-      pgonVertCount += 1
-      if (pgonVertCount === 3) {
-        pgonVertCount = 0
-        pgons.push(pgonPos)
-        pgonPos = []
+function getThreeGeomCoords(threeObj, fileUnit): number[][][] {
+  try {
+    if (threeObj.type === 'Group') {
+      let pgons = []
+      for (const obj of threeObj.children) {
+        pgons = pgons.concat(getThreeGeomCoords(obj, fileUnit))
       }
-    }
-    return pgons
+      return pgons
+    } else if (threeObj.type === 'Mesh') {
+      const gp = threeObj.geometry.attributes.position;
+      if (!gp) { return []; }
+      const pgons: number[][][] = [];
+      let pgonPos: number[][] = [];
+      let pgonVertCount = 0
+      for (let i = 0; i < gp.count; i++) {
+        const p = new THREE.Vector3().fromBufferAttribute(gp, i); // set p from `position`
+        // const coord = [p.x, p.y, p.z / 39.37]
+        const coord = [p.x, p.y, p.z]
+        if (fileUnit === 'inch') {
+          for (let cI = 0; cI < coord.length; cI++) {
+            coord[cI] /= 39.37
+          }
+        }
+        pgonPos.push(coord);
+        pgonVertCount += 1
+        if (pgonVertCount === 3) {
+          pgonVertCount = 0
+          pgons.push(pgonPos)
+          pgonPos = []
+        }
+      }
+      return pgons
+    }  
+  } catch (ex) {
+    console.log('error reading file:', ex)
   }
   return []
 }

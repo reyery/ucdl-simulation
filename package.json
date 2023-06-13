@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --host 0.0.0.0 --port 5200",
+    "start": "ng serve --host 0.0.0.0 --port 8091",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -30,6 +30,7 @@
     "axios": "^1.2.1",
     "canvas": "^2.11.0",
     "chroma-js": "^2.4.2",
+    "fast-xml-parser": "^4.2.2",
     "geotiff": "^2.0.7",
     "itowns": "^2.38.2",
     "leaflet": "^1.9.3",

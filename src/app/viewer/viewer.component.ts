@@ -3,7 +3,7 @@ import * as itowns from 'itowns';
 import * as THREE from 'three';
 
 import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, SIM_DATA_UPLOAD } from './util/viewer.const';
-import { getResultLayer, removeResultLayer, updateHUD } from './util/viewer.getresult';
+import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
 import { addViewGeom, removeSimulation } from './util/viewer.threejs';
@@ -585,6 +585,15 @@ export class ViewerComponent implements AfterViewInit {
     // this.switchBuildingLayer(this.drawSim.building_type)
   }
 
+
+  toggleAreaSelect() {
+    if (this.uploadSource && this.uploadSource.getFeatures().length > 0) {
+      this.toggleOpenlayersUploadMode()
+    } else {
+      this.toggleOpenlayersDrawMode()
+    }
+  }
+
   toggleOpenlayersDrawMode() {
     if (this.olMode === OL_MODE.upload) {
       this.olMode = OL_MODE.draw
@@ -624,6 +633,7 @@ export class ViewerComponent implements AfterViewInit {
       this.toggleElement('openlayers_container', true)
       this.toggleElement('itowns_container', false)
     }
+    updateWindHUDPos(this.olMode === OL_MODE.none)
   }
 
   toggleOpenlayersUploadMode() {
@@ -661,6 +671,7 @@ export class ViewerComponent implements AfterViewInit {
       this.toggleElement('openlayers_container', true)
       this.toggleElement('itowns_container', false)
     }
+    updateWindHUDPos(this.olMode === OL_MODE.none)
   }
 
   toggleOpenlayersDrawBtnClass() {
@@ -731,8 +742,15 @@ export class ViewerComponent implements AfterViewInit {
     this.olCtrlMode = OL_CTRL_MODE.upload_translate
   }
 
-  getButtonClass(attr, val, btnClass) {
-
+  getButtonClass(attr, val: string|Array<string>, btnClass) {
+    if (Array.isArray(val)) {
+      for (const v of val) {
+        if (this[attr] === v) {
+          return btnClass + ' bg-blue-300 hover:bg-blue-200'
+        }    
+      }
+      return btnClass + ' bg-white hover:bg-gray-100'
+    }
     if (this[attr] === val) {
       return btnClass + ' bg-blue-300 hover:bg-blue-200'
     }
@@ -742,15 +760,16 @@ export class ViewerComponent implements AfterViewInit {
 
   uploadBtnClick(event) {
     event.stopPropagation()
-    if (this.olMode === OL_MODE.upload) {
-      this.toggleOpenlayersUploadMode()
-    } else {
-      if (this.uploadSource && this.uploadSource.getFeatures().length === 0) {
-        this.resetDrawing()
-      }
-      this.toggleOpenlayersUploadMode()
-      document.getElementById('massing_upload').click()
-    }
+    document.getElementById('massing_upload').click()
+    // if (this.olMode === OL_MODE.upload) {
+    //   this.toggleOpenlayersUploadMode()
+    // } else {
+    //   if (this.uploadSource && this.uploadSource.getFeatures().length === 0) {
+    //     this.resetDrawing()
+    //   }
+    //   this.toggleOpenlayersUploadMode()
+    //   document.getElementById('massing_upload').click()
+    // }
   }
 
   addUploadFeature(features: Feature<Polygon>[], count = 0) {
@@ -776,6 +795,7 @@ export class ViewerComponent implements AfterViewInit {
     console.log('currentItownCoord', currentItownCoord)
     const massingDataResult = await readMassingFiles(files, [currentItownCoord.x, currentItownCoord.y])
     if (massingDataResult) {
+      this.toggleOpenlayersUploadMode()
       this.uploadedGeomData = massingDataResult.uploadedGeomData
       this.addUploadFeature(this.uploadedGeomData.features)
       this.uploadedGeomTransf = {
@@ -1004,7 +1024,7 @@ export class ViewerComponent implements AfterViewInit {
       data.feature.set('draw_type', 'sim_bound')
       //@ts-ignore
       const bounds = data.feature.getGeometry().getCoordinates()[0]
-      const btn = document.getElementById('toggle_draw_btn')
+      const btn = document.getElementById('toggle_draw_btn_draw')
       if (btn) { btn.click() }
 
       measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';

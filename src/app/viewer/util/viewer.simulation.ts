@@ -1,9 +1,9 @@
 import { visResult} from "../simulation-js/sim_execute"
-import { raster_to_sim, raster_to_sim_sky } from "../simulation-js/sim_convert_py_result"
+import { raster_to_sim, raster_to_sim_sky, raster_to_sim_ap } from "../simulation-js/sim_convert_py_result"
 import * as itowns from 'itowns';
 import * as THREE from "three";
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
-import { updateHUD } from "./viewer.getresult";
+import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
 import { addGeom, addGeomSky, addViewGeom, removeViewerGroup } from "./viewer.threejs";
 
@@ -85,6 +85,10 @@ async function runJSSimulation(view, coords, simulation) {
   // view.scene.add(threeJSGroup);
   // view.notifyChange();
 
+  if (simulation.id === 'wind') {
+    updateWindHUD(resp.wind_stns)
+  }
+
   const extraInfo = resultSIM.attrib.Get(null, 'extra_info')
   return extraInfo
 
@@ -93,6 +97,8 @@ async function runJSSimulation(view, coords, simulation) {
 async function runPYSimulation(view, coords, simulation) {
   if (simulation.id === 'sky') {
     return sky(view, coords, simulation)
+  } else if (simulation.id === 'ap') {
+    return ap(view, coords, simulation)
   }
 
   if (!coords || coords.length === 0) { return [null, null] }
@@ -109,7 +115,7 @@ async function runPYSimulation(view, coords, simulation) {
   const resp = await response.json()
   console.log('response', response)
   console.log('resp', resp)
-  const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
+  const [result, bottomLeft, colRange] = raster_to_sim_ap(coords[0], resp, simulation)
   const extra_info = result.attrib.Get(null, 'extra_info')
 
   const threeJSGroup = new THREE.Group();
@@ -174,6 +180,49 @@ async function sky(view, coords, simulation) {
   threeJSGroup.updateMatrixWorld(true);
 
   const extra_info = result.attrib.Get(null, 'extra_info')
+
+  // current_sim_div = document.getElementById('current_sim') as HTMLDivElement
+  // if (current_sim_div && current_sim_div.innerHTML !== result_type) {
+  //   return false;
+  // }
+
+  view.scene.add(threeJSGroup);
+  view.notifyChange();
+  return [colRange, extra_info]
+
+}
+
+async function ap(view, coords, simulation) {
+  if (!coords || coords.length === 0) { return [null, null] }
+
+  const response = await fetch(PY_SERVER + simulation.id, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      bounds: coords[0]
+    })
+  });
+  const resp = await response.json()
+  console.log('response', response)
+  console.log('resp', resp)
+  const [result, bottomLeft, colRange] = raster_to_sim_ap(coords[0], resp, simulation)
+  const extra_info = result.attrib.Get(null, 'extra_info')
+
+  const threeJSGroup = new THREE.Group();
+  threeJSGroup.name = 'simulation_result';
+
+  const geom = await addGeom(result, null, 1) as any
+  threeJSGroup.add(geom)
+
+  const camTarget = new itowns.Coordinates('EPSG:4326', bottomLeft[0], bottomLeft[1], 1);
+  const cameraTargetPosition = camTarget.as(view.referenceCrs);
+
+  threeJSGroup.position.copy(cameraTargetPosition);
+
+  itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
+  threeJSGroup.updateMatrixWorld(true);
 
   // current_sim_div = document.getElementById('current_sim') as HTMLDivElement
   // if (current_sim_div && current_sim_div.innerHTML !== result_type) {
