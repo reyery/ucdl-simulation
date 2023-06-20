@@ -52,6 +52,11 @@ async function runJSSimulation(view, coords, simulation) {
   if (!coords || coords.length === 0) { return }
 
   const session = 'r' + (new Date()).getTime()
+  console.log('request', JS_SERVER + simulation.id, JSON.stringify({
+    bounds: coords[0],
+    session: session
+  }))
+
   const response = await fetch(JS_SERVER + simulation.id, {
     method: 'POST',
     headers: {
@@ -62,6 +67,7 @@ async function runJSSimulation(view, coords, simulation) {
       session: session
     })
   });
+  console.log(response)
   const resp = await response.json()
 
   const resultSIM = await visResult(coords[0], simulation, resp.result)
@@ -103,6 +109,9 @@ async function runPYSimulation(view, coords, simulation) {
 
   if (!coords || coords.length === 0) { return [null, null] }
 
+  console.log('request', PY_SERVER + simulation.id, JSON.stringify({
+    bounds: coords[0],
+  }))
   const response = await fetch(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
@@ -112,6 +121,7 @@ async function runPYSimulation(view, coords, simulation) {
       bounds: coords[0]
     })
   });
+  console.log(response)
   const resp = await response.json()
   console.log('response', response)
   console.log('resp', resp)

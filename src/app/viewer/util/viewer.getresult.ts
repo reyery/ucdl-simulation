@@ -13,7 +13,8 @@ export async function getResultLayer(view, simulation, itown_layers) {
     if (simulation.maptype === 'tile') {
         const wmsSource = new itowns.WMSSource({
             url: BUILDING_TILES_URL.replace('wfs', 'wms'),
-            name: simulation.id + '_png',
+            name: simulation.id + '_tif',
+            version: '1.1.0',
             transparent: true,
             crs: 'EPSG:4326',
             extent: {
