@@ -1,13 +1,12 @@
 import proj4 from 'proj4';
 import {register} from 'ol/proj/proj4.js';
+import { environment } from 'src/environments/environment';
 
 export const SHOW_BUILDINGS = true;
 export const LONGLAT = [ 103.778329, 1.298759];
 export const DEFAULT_LONGLAT = [103.854382, 1.295460];
 // export const DEFAULT_LONGLAT = [4.818, 45.7354]
-export const BUILDING_TILES_URL = 'http://172.16.164.199:8090/geoserver/sg_sim/wfs?'
-export const JS_SERVER = 'http://172.16.164.199:5202/'
-export const PY_SERVER = 'http://172.26.51.153:5000/'
+export const {BUILDING_TILES_URL, JS_SERVER, PY_SERVER } = environment
 export const RESULT_URL = 'assets/result_full/'
 export const MAX_AP_LAYERS = 25
 export const SIM_DATA = {
