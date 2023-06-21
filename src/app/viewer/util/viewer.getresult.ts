@@ -13,8 +13,8 @@ export async function getResultLayer(view, simulation, itown_layers) {
     if (simulation.maptype === 'tile') {
         const wmsSource = new itowns.WMSSource({
             url: BUILDING_TILES_URL.replace('wfs', 'wms'),
-            name: simulation.id + '_tif',
-            version: '1.1.0',
+            name: simulation.id + '_png',
+            // version: '1.2.0',
             transparent: true,
             crs: 'EPSG:4326',
             extent: {
@@ -152,7 +152,7 @@ export async function removeResultLayer(view) {
     for (let i = 0; i < MAX_AP_LAYERS; i++) {
         const layerName = 'resultLayer_ap_' + i
         const layer_ap = view.getLayerById(layerName)
-        if (layer_ah) {
+        if (layer_ap) {
             view.removeLayer(layerName);
         }
     }
