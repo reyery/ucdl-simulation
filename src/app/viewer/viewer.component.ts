@@ -6,7 +6,7 @@ import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BU
 import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
-import { addViewGeom, removeSimulation } from './util/viewer.threejs';
+import { addViewGeom, removeSimulation, removeViewerGroup } from './util/viewer.threejs';
 
 import proj4 from 'proj4';
 import * as shapefile from 'shapefile';
@@ -594,17 +594,32 @@ export class ViewerComponent implements AfterViewInit {
     }
   }
 
+  updateViewCoord() {
+    // const newCenter = this.map.getView().getCenter()
+    // setTimeout(async () => {
+    //   if (newCenter && newCenter[0] && newCenter[1]) {
+    //     const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
+    //     console.log('transformCameraToLookAtTarget coord:', newViewCoord)
+    //     itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+    //       coord: newViewCoord
+    //     })
+    //   }
+    // }, 300);
+  }
+
   toggleOpenlayersDrawMode() {
     if (this.olMode === OL_MODE.upload) {
       this.olMode = OL_MODE.draw
       this.toggleElement('openlayers_upload_simBound_container', true)
     } else if (this.olMode === OL_MODE.draw) {
       this.olMode = OL_MODE.none
+      // this.updateViewCoord()
     } else {
       this.olMode = OL_MODE.draw
     }
 
     if (this.olMode === OL_MODE.draw) {
+      removeViewerGroup(this.view, 'upload_model')
       if (this.uploadSource && this.uploadSource.getFeatures().length > 0) {
         this.uploadSource.clear()
       }
@@ -642,6 +657,7 @@ export class ViewerComponent implements AfterViewInit {
       this.toggleElement('openlayers_draw_ctrl_container', true)
     } else if (this.olMode === OL_MODE.upload) {
       this.olMode = OL_MODE.none
+      // this.updateViewCoord()
     } else {
       this.olMode = OL_MODE.upload
     }
@@ -1041,6 +1057,15 @@ export class ViewerComponent implements AfterViewInit {
       })
     })
 
+    const view = this.view
+    map.on('moveend', function (e) {
+      const newCenter = map.getView().getCenter()
+      const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
+      itowns.CameraUtils.transformCameraToLookAtTarget(view, view.camera.camera3D, {
+        coord: newViewCoord
+      })
+    });
+
 
     const uploadBoundDraw = new Draw({
       source: uploadBoundSource,
@@ -1096,24 +1121,24 @@ export class ViewerComponent implements AfterViewInit {
     if (!features || features.length <= 0) { return }
     setLoading(true)
     try {
-      const newCenter = this.map.getView().getCenter()
+      // const newCenter = this.map.getView().getCenter()
       removeSimulation(this.view);
       await runDrawSim(this.view, (<Polygon>features[0].getGeometry()).getCoordinates(), this.drawSim)
-      try {
-        console.log('newCenter', newCenter)
-        if (newCenter[0] && newCenter[1]) {
-          const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
-          console.log('transformCameraToLookAtTarget coord:', newViewCoord)
-          setTimeout(() => {
-            itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
-              coord: newViewCoord
-            })
-          }, 0);
-        }
-      }
-      catch (ex) {
-        console.log('error getting coordinate!!!', ex)
-      }
+      // try {
+      //   console.log('newCenter', newCenter)
+      //   if (newCenter[0] && newCenter[1]) {
+      //     const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
+      //     console.log('transformCameraToLookAtTarget coord:', newViewCoord)
+      //     setTimeout(() => {
+      //       itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+      //         coord: newViewCoord
+      //       })
+      //     }, 0);
+      //   }
+      // }
+      // catch (ex) {
+      //   console.log('error getting coordinate!!!', ex)
+      // }
     } catch (ex) {
       console.log('ERROR!!!', ex)
     }
@@ -1152,18 +1177,18 @@ export class ViewerComponent implements AfterViewInit {
       this.uploadedGeomData.featureBoundary = (<Polygon>uploadBoundFeature[0].getGeometry()).getCoordinates()[0].slice(0, -1)
     }
     try {
-      const newCenter = this.map.getView().getCenter()
+      // const newCenter = this.map.getView().getCenter()
       removeSimulation(this.view);
       await runUploadSim(this.view, this.uploadedGeomData, this.drawSim)
-      if (newCenter && newCenter[0] && newCenter[1]) {
-        const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
-        console.log('transformCameraToLookAtTarget coord:', newViewCoord)
-        setTimeout(() => {
-          itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
-            coord: newViewCoord
-          })
-        }, 0);
-      }
+      // if (newCenter && newCenter[0] && newCenter[1]) {
+      //   const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
+      //   console.log('transformCameraToLookAtTarget coord:', newViewCoord)
+      //   setTimeout(() => {
+      //     itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+      //       coord: newViewCoord
+      //     })
+      //   }, 0);
+      // }
     } catch (ex) {
       console.log('ERROR!!!', ex)
     }
