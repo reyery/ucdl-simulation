@@ -1,21 +1,21 @@
-import { visResult } from "../simulation-js/sim_execute"
+import { visResult, visResult1 } from "../simulation-js/sim_execute"
 import { eval_to_sim } from "../simulation-js/sim_convert_py_result"
 import * as itowns from 'itowns';
 import * as THREE from "three";
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
 import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
-import { addGeom, addViewGeom } from "./viewer.threejs";
+import { addGeom, addGeomSky, addViewGeom, removeViewerGroup } from "./viewer.threejs";
 import GeoJSON from 'ol/format/GeoJSON.js';
 
-export async function runSimulation(view, simData, simulation) {
+export async function runSimulation(view, simData, simulation, gridSize) {
   let extraInfo, colorRange
 
   console.log('simData', simData)
   if (simulation.type === 'js') {
-    extraInfo = await runJSSimulation(view, simData, simulation)
+    extraInfo = await runJSSimulation(view, simData, simulation, gridSize)
   } else {
-    [colorRange, extraInfo] = await runPYSimulation(view, simData, simulation)
+    [colorRange, extraInfo] = await runPYSimulation(view, simData, simulation, gridSize)
   }
   return updateHUD({
     ...simulation,
@@ -24,7 +24,7 @@ export async function runSimulation(view, simData, simulation) {
   })
 }
 
-async function runJSSimulation(view, simData, simulation) {
+async function runJSSimulation(view, simData, simulation, gridSize) {
   if (!simData) { return }
 
   const session = 'r' + (new Date()).getTime()
@@ -33,7 +33,7 @@ async function runJSSimulation(view, simData, simulation) {
     data: simData.data,
     simBoundary: simData.simBoundary ? simData.simBoundary : null,
     featureBoundary: simData.featureBoundary ? simData.featureBoundary : null,
-    gridSize: simulation.grid_size || 10, 
+    gridSize: gridSize, 
     session: session
   }
   if (simData.simBoundary)
@@ -52,9 +52,37 @@ async function runJSSimulation(view, simData, simulation) {
   // TODO: add result as textured plane rather than multiple colored squares
   // eval_to_sim()
   
-  const resultSIM = await visResult(simData.simBoundary, simulation, resp.result, resp.surrounding)
-  console.log('simulation.id', simulation.id)
+  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(simData.simBoundary, simulation, resp.result, gridSize, resp.surrounding)
+  // var link = document.createElement('a');
+  // link.download = 'filename.png';
+  // link.href = canvas.toDataURL()
+  // link.click();
   await addViewGeom(view, resultSIM, simData.simBoundary[0], 'simulation_result')
+
+  const canvasTexture = new THREE.CanvasTexture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.NearestFilter)
+  canvasTexture.offset = new THREE.Vector2(...offset)
+
+  // await addViewGeom(view, resultSIM, canvasTexture, coords[0][0], 'simulation_result')
+  removeViewerGroup(view, 'simulation_result')
+  const threeJSGroup = new THREE.Group();
+  threeJSGroup.name = 'simulation_result';
+
+  const geom = await addGeomSky(resultSIM, canvasTexture, 1)
+  const surrGeom = await addGeom(surrSim)
+  threeJSGroup.add(geom)
+  threeJSGroup.add(surrGeom)
+
+  const camTarget = new itowns.Coordinates('EPSG:4326', minCoord[2], minCoord[3], 0.1);
+  const cameraTargetPosition = camTarget.as(view.referenceCrs);
+
+  threeJSGroup.position.copy(cameraTargetPosition);
+
+  itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
+  threeJSGroup.updateMatrixWorld(true);
+
+  view.scene.add(threeJSGroup);
+  view.notifyChange();
+
   if (simulation.id === 'wind') {
     updateWindHUD(resp.wind_stns)
   }
@@ -83,7 +111,7 @@ async function simToGeoJSON(inputModel: string) {
   return JSON.stringify(JSON.parse(geoJSON))
 }
 
-async function runPYSimulation(view, simData, simulation) {
+async function runPYSimulation(view, simData, simulation, gridSize) {
   if (!simData) { return [null, null] }
   const session = 'r' + (new Date()).getTime()
 

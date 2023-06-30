@@ -2,7 +2,7 @@ import { AfterViewInit, Component, HostListener } from '@angular/core';
 import * as itowns from 'itowns';
 import * as THREE from 'three';
 
-import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, SIM_DATA_UPLOAD } from './util/viewer.const';
+import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, SIM_DATA_UPLOAD, GRID_SIZE_SELECTIONS } from './util/viewer.const';
 import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
@@ -196,7 +196,9 @@ export class ViewerComponent implements AfterViewInit {
   private olMode = OL_MODE.none
 
   private olCtrlMode = OL_CTRL_MODE.draw_sim_bound
-  public drawSim = SIM_DATA['wind'];
+  public drawSim = SIM_DATA['solar'];
+  public gridSize = GRID_SIZE_SELECTIONS['js'][0]
+  public gridSizeSelections = GRID_SIZE_SELECTIONS
 
   private map: Map;
   private drawSource: VectorSource;
@@ -580,8 +582,20 @@ export class ViewerComponent implements AfterViewInit {
   changeDrawSim(event: MouseEvent, new_sim: string) {
     event.stopPropagation()
     this.drawSim = SIM_DATA[new_sim]
+    if (this.gridSize.type !== this.drawSim.type) {
+      this.gridSize = this.gridSizeSelections[this.drawSim.type][0]
+    }
     this.toggleElement('sim_select_apply', true)
     this.toggleElement('sim_select_upload_apply', true)
+    // this.switchBuildingLayer(this.drawSim.building_type)
+  }
+
+
+  changeGridSize(event: MouseEvent, gridSizeSel: any) {
+    event.stopPropagation()
+    this.gridSize = gridSizeSel
+    this.toggleElement('gridsize_select_apply', true)
+    this.toggleElement('gridsize_select_upload_apply', true)
     // this.switchBuildingLayer(this.drawSim.building_type)
   }
 
@@ -1123,7 +1137,7 @@ export class ViewerComponent implements AfterViewInit {
     try {
       // const newCenter = this.map.getView().getCenter()
       removeSimulation(this.view);
-      await runDrawSim(this.view, (<Polygon>features[0].getGeometry()).getCoordinates(), this.drawSim)
+      await runDrawSim(this.view, (<Polygon>features[0].getGeometry()).getCoordinates(), this.drawSim, this.gridSize.gridsize)
       // try {
       //   console.log('newCenter', newCenter)
       //   if (newCenter[0] && newCenter[1]) {
@@ -1179,7 +1193,7 @@ export class ViewerComponent implements AfterViewInit {
     try {
       // const newCenter = this.map.getView().getCenter()
       removeSimulation(this.view);
-      await runUploadSim(this.view, this.uploadedGeomData, this.drawSim)
+      await runUploadSim(this.view, this.uploadedGeomData, this.drawSim, this.gridSize.gridsize)
       // if (newCenter && newCenter[0] && newCenter[1]) {
       //   const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
       //   console.log('transformCameraToLookAtTarget coord:', newViewCoord)

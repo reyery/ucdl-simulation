@@ -24,7 +24,7 @@ export async function addViewGeom(view: itowns.View, sim: SIMFuncs, viewCoord: n
   view.notifyChange();
 
 }
-export async function addGeom(sim: SIMFuncs, texture: ArrayBuffer|null = null, opacity=1) {
+export async function addGeom(sim: SIMFuncs, texture: any = null, opacity=1) {
     // const sim = new SIMFuncs()
     // sim.io.ImportData(model, 'sim' as any);
   
@@ -119,7 +119,7 @@ export async function addGeom(sim: SIMFuncs, texture: ArrayBuffer|null = null, o
     // sim.io.ImportData(model, 'sim' as any);
   
     const threejs_data = sim.model.viewerGet3jsData(1);
-  
+
     // Get materials
     const pgon_material_groups = threejs_data.pgon_material_groups;
     const pgon_materials = threejs_data.pgon_materials;
@@ -149,6 +149,7 @@ export async function addGeom(sim: SIMFuncs, texture: ArrayBuffer|null = null, o
     let geom = new THREE.BufferGeometry();
     geom.setIndex(tris_i);
     geom.setAttribute('position', posis_buffer);
+    // let geom = new THREE.PlaneGeometry(100, 100);
     const uv_arr: number[] = []
     const max = [0, 0]
     for (let i = 0; i < posis_buffer.count; i++) {
@@ -172,6 +173,8 @@ export async function addGeom(sim: SIMFuncs, texture: ArrayBuffer|null = null, o
     let material_arr
     if (texture) {
       material_arr = new THREE.MeshBasicMaterial({map: texture})
+      material_arr.transparent = true
+      // material_arr.opacity = opacity
     } else {
       material_arr= [];
       let index = 0;

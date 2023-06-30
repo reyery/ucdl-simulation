@@ -25,12 +25,12 @@ export const SIM_DATA = {
         id: 'sky',
         display_name: 'Urban Heat Island Intensity',
         sim_name: 'Urban Heat Island Intensity',
-        desc: '(measured by SVF)',
+        // desc: '(measured by SVF)',
         type: 'js',
         maptype: 'tile',
-        col_range: [0, 1],
+        col_range: [0, 100],
         col_scale: ['#EB6E00', 'white'],
-        unit: '',
+        unit: '%',
         building_type: 'extruded',
         grid_size: 10
     },
@@ -108,6 +108,17 @@ export const SIM_DATA = {
         building_type: 'extruded',
         grid_size: 10,
     },
+}
+export const GRID_SIZE_SELECTIONS = {
+    'py': [
+        {gridsize: 200, label: '200m x 200m', type: 'py'},
+    ],
+    'js': [
+        {gridsize: 10, label: '10m x 10m', type: 'js'},
+        {gridsize: 5, label: '5m x 5m', type: 'js'},
+        {gridsize: 2, label: '2m x 2m', type: 'js'},
+        {gridsize: 1, label: '1m x 1m', type: 'js'},
+    ]
 }
 
 export const SIM_DATA_UPLOAD = {

@@ -18,7 +18,7 @@
                 <div class="py-1" role="none">
                     <button *ngFor="let sim of sim_data_list; index as i"
                         class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                        role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i"
+                        role="menuitem" tabindex="-1"
                         (mousedown)="changeSim($event, sim.id)">
                         {{sim.display_name}}
                     </button>
@@ -60,9 +60,31 @@
                             <div class="py-1" role="none">
                                 <button *ngFor="let sim of sim_data_list.slice(1); index as i"
                                     class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i"
+                                    role="menuitem" tabindex="-1"
                                     (mousedown)="changeDrawSim($event, sim.id)">
                                     {{sim.sim_name}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="gridsize_select_container" class="relative ml-2 text-gray-600">
+                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_apply')"
+                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                            id="menu-button" aria-expanded="true" aria-haspopup="true">
+                            <span>{{gridSize.label}}</span>
+                            <!-- Heroicon name: mini/chevron-down -->
+                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                fontIcon="expand_more"></mat-icon>
+                        </button>
+                        <div id="gridsize_select_apply"
+                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                            <div class="py-1" role="none">
+                                <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                    role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                    (mousedown)="changeGridSize($event, gridSizeSel)">
+                                    {{gridSizeSel.label}}
                                 </button>
                             </div>
                         </div>
@@ -92,9 +114,31 @@
                                 <!-- <button *ngFor="let sim of sim_data_list.slice(1); index as i" -->
                                 <button *ngFor="let sim of sim_data_upload_list.slice(1); index as i"
                                     class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" [id]="'sim-menu-item-' + i"
+                                    role="menuitem" tabindex="-1"
                                     (mousedown)="changeDrawSim($event, sim.id)">
                                     {{sim.sim_name}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="gridsize_select_upload_container" class="relative ml-2 text-gray-600">
+                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_upload_apply')"
+                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                            id="menu-button" aria-expanded="true" aria-haspopup="true">
+                            <span>{{gridSize.label}}</span>
+                            <!-- Heroicon name: mini/chevron-down -->
+                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                fontIcon="expand_more"></mat-icon>
+                        </button>
+                        <div id="gridsize_select_upload_apply"
+                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                            <div class="py-1" role="none">
+                                <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                    role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                    (mousedown)="changeGridSize($event, gridSizeSel)">
+                                    {{gridSizeSel.label}}
                                 </button>
                             </div>
                         </div>

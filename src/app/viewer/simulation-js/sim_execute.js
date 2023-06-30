@@ -5,6 +5,8 @@ import { sg_wind } from "./sg_wind_all.js"
 import { sg_wind_stn_data } from "./sg_wind_station_data.js"
 import proj4 from 'proj4';
 import * as shapefile from 'shapefile';
+import { createCanvas } from 'canvas';
+import { scale as chromaScale } from 'chroma-js';
 
 const solar_settings = {
     DETAIL: 1,
@@ -425,6 +427,8 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     const pgons = sim.query.Get('pg', null);
     processSite(sim, pgons)
     
+    console.log('________', await sim.io.ExportData(null, 'sim'))
+    
     const sens_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'ground');
     console.log('sens_pgons', sens_pgons, sens_pgons.length)
     console.log('result', result)
@@ -465,6 +469,72 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     return sim
 }
 
+export async function visResult1(latLongs, simulation, result, gridSize, extraGeom = null) {
+
+    const minCoord = [99999, 99999, 99999, 99999];
+    // const maxCoord = [-99999, -99999];
+    const coords = []
+    console.log('latLongs', latLongs)
+    for (const latlong of latLongs) {
+        const coord = [ ...proj_obj.forward(latlong), 0]
+        minCoord[0] = Math.min(coord[0], minCoord[0])
+        minCoord[1] = Math.min(coord[1], minCoord[1])
+        minCoord[2] = Math.min(minCoord[2], latlong[0])
+        minCoord[3] = Math.min(minCoord[3], latlong[1])
+        // maxCoord[0] = Math.max(coord[0], maxCoord[0])
+        // maxCoord[1] = Math.max(coord[1], maxCoord[1])
+        coords.push(coord)
+    }
+    for (let i = 0; i < coords.length; i++) {
+        if (coords[i][1] === minCoord[1]) {
+            const splitted = coords.splice(0, i)
+            console.log(splitted)
+            for (const item of splitted) {
+                coords.push(item)
+            }
+            break;
+        }
+    }
+
+    const sim = new SIMFuncs();
+    const surrSim = new SIMFuncs();
+
+    const pos = sim.make.Position(coords)
+    const pgon = sim.make.Polygon(pos)
+    const normal = sim.calc.Normal(pgon, 1)
+    if (normal[2] < 0) {
+        sim.edit.Reverse(pgon)
+    }
+
+    sim.attrib.Set(pgon, 'type', 'site')
+    sim.attrib.Set(pgon, 'cluster', 0)
+
+    const pgons = sim.query.Get('pg', null);
+    const [canvas, offset] = processSite1(sim, pgons, result, simulation, gridSize)
+    const allPgons = sim.query.Get('pg', null);
+
+    sim.modify.Move(allPgons, [-minCoord[0], -minCoord[1], 0])
+
+    if (extraGeom && extraGeom.length > 0) {
+        for (const geom of extraGeom) {
+            const ps = surrSim.make.Position(geom.coord)
+            const pg = surrSim.make.Polygon(ps)
+            const pgons = surrSim.make.Extrude(pg, geom.height, 1, 'quads')
+            surrSim.modify.Move(pgons, [-minCoord[0], -minCoord[1], 0])
+        }
+    }
+
+    if (simulation.id === 'sky') {
+        for (let i = 0; i < result.length; i++) {
+            result[i] = result[i] / 100
+        }
+        const UHII = Math.round((-6.51 * (result.reduce((partialSum, a) => partialSum + a, 0)) / result.length + 7.13) * 10) / 10
+        const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
+        sim.attrib.Set(null, 'extra_info', extra_info)
+    } 
+    return [sim, surrSim, canvas, minCoord, offset]
+}
+
 function processSite(sim, pgons) {
     // get the site polygon
     const site = sim.query.Filter(pgons, 'type', '==', 'site');
@@ -494,12 +564,65 @@ function processSite(sim, pgons) {
         if (norm[2] < 0) { sim.edit.Reverse(pgon); }
     }
     // clean up
-    sim.edit.Delete([grid_pgons0, site_off], 'delete_selected');
+    sim.edit.Delete([site_off], 'delete_selected');
+    // sim.edit.Delete([grid_pgons0, site_off], 'delete_selected');
     // sim.edit.Delete([grid_pgons0, grid_pgons1, bases_off, site_off], 'delete_selected');
     // move the grid up by 1 m
     sim.modify.Move(grid_pgons2, [0,0,1]);
+    sim.modify.Move(grid_pgons0, [0,0,2]);
     // set attribs
     sim.attrib.Set(grid_pgons2, 'type', 'ground', 'one_value');
     // update colour
     sim.visualize.Color(site, sim.inl.colFromStr('lightgreen'));
+}
+
+function processSite1(sim, pgons, results, info, gridSize) {
+    // get the site polygon
+    const site = sim.query.Filter(pgons, 'type', '==', 'site');
+    const site_off = sim.poly2d.OffsetMitre(site, 0, 1, 'square_end');
+    // get the bases of any obstructions, to be used to boolean holes in the grid
+    // const obstructions = sim.query.Filter(pgons, 'type', '==', 'obstruction');
+    // const obstruction_posis = sim.query.Get('ps', obstructions);
+    // sim.attrib.Push(obstruction_posis, ['xyz', 2, 'z'], 'pg' );
+    // const bases = sim.query.Filter(pgons, 'z', '==', 0);
+    // const bases_off = sim.poly2d.OffsetMitre(bases, 0, 1, 'square_end');
+
+    // create a grid that covers the whole site
+    const [cen, _, __, size] = sim.calc.BBox(site);
+    const bound = sim.query.Filter(pgons, 'type', '==', 'site');
+    const num_edges = [Math.ceil(size[0]/gridSize), Math.ceil(size[1]/gridSize)];
+    const grid_posis = sim.pattern.Grid([cen[0], cen[1], 0], 
+        [num_edges[0] * gridSize, num_edges[1] * gridSize],
+        [num_edges[0] + 1,         num_edges[1] + 1], 'quads');
+    const grid_pgons0 = sim.make.Polygon(grid_posis);
+    const site_bound = sim.poly2d.BBoxPolygon(site, 'aabb')
+
+    const canvas = createCanvas(num_edges[0] * 2 , num_edges[1] * 2);
+    const context = canvas.getContext("2d");
+    let match_index = 0
+    let pg_index = 0
+    const colorScale = chromaScale(info.col_scale).domain(info.col_range);
+    // const offset = [0.5 / num_edges[0], 0.5 / num_edges[1]]
+    const offset = [0, 0]
+
+    for (const pg of grid_pgons0) {
+        const bool = sim.poly2d.Boolean(pg, site_off, 'intersect');
+        const x = pg_index % num_edges[0]
+        const y = num_edges[1] - 1 - Math.floor(pg_index / num_edges[0])
+        // const y = Math.floor(pg_index / num_edges[0])
+        if (bool.length > 0) {
+            sim.edit.Delete(bool, 'delete_selected');
+            context.fillStyle = colorScale(results[match_index]).css();
+            context.fillRect(x * 2, y * 2, 2, 2);
+            match_index++
+        } else {
+            // context.fillStyle = "rgba(255, 255, 255, 0)";
+            // context.fillRect(x * gridSize - gridSize / 2, y * gridSize  - gridSize / 2, gridSize, gridSize);
+            // console.log( x, y, 0)
+        }
+        pg_index++
+    }
+    // clean up
+    sim.edit.Delete(site_bound, 'keep_selected');
+    return [canvas, offset]
 }

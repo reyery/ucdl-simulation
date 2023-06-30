@@ -1,4 +1,4 @@
-import { visResult} from "../simulation-js/sim_execute"
+import { visResult1 } from "../simulation-js/sim_execute"
 import { raster_to_sim, raster_to_sim_sky, raster_to_sim_ap } from "../simulation-js/sim_convert_py_result"
 import * as itowns from 'itowns';
 import * as THREE from "three";
@@ -7,13 +7,13 @@ import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
 import { addGeom, addGeomSky, addViewGeom, removeViewerGroup } from "./viewer.threejs";
 
-export async function runSimulation(view, polygon, simulation) {
+export async function runSimulation(view, polygon, simulation, gridSize) {
   removeViewerGroup(view, 'upload_model')
   let extraInfo, colorRange
   if (simulation.type === 'js') {
-    extraInfo = await runJSSimulation(view, polygon, simulation)
+    extraInfo = await runJSSimulation(view, polygon, simulation, gridSize)
   } else {
-    [colorRange, extraInfo] = await runPYSimulation(view, polygon, simulation)
+    [colorRange, extraInfo] = await runPYSimulation(view, polygon, simulation, gridSize)
   }
   return updateHUD({
     ...simulation,
@@ -48,48 +48,56 @@ export async function runSimulation(view, polygon, simulation) {
 //   return extraInfo
 // }
 
-async function runJSSimulation(view, coords, simulation) {
+async function runJSSimulation(view, coords, simulation, gridSize) {
   if (!coords || coords.length === 0) { return }
 
   const session = 'r' + (new Date()).getTime()
-  console.log('request', JS_SERVER + simulation.id, JSON.stringify({
+  const reqBody = {
     bounds: coords[0],
+    gridSize: gridSize,
     session: session
-  }))
-
+  }
+  console.log('reqBody', reqBody)
   const response = await fetch(JS_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      bounds: coords[0],
-      session: session
-    })
+    body: JSON.stringify(reqBody)
   });
-  console.log(response)
   const resp = await response.json()
+  console.log('response', resp)
+  // const d1 = await result.io.ExportData(null, 'sim')
+  // console.log('~~~~~~____', d1)
 
-  const resultSIM = await visResult(coords[0], simulation, resp.result)
+  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(coords[0], simulation, resp.result, gridSize)
+  // var link = document.createElement('a');
+  // link.download = 'filename.png';
+  // link.href = canvas.toDataURL()
+  // link.click();
+  
+  const canvasTexture = new THREE.CanvasTexture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.NearestFilter)
+  canvasTexture.offset = new THREE.Vector2(...offset)
 
-  await addViewGeom(view, resultSIM, coords[0][0], 'simulation_result')
-  // console.log('resultSIM', resultSIM)
-  // const threeJSGroup = new THREE.Group();
-  // threeJSGroup.name = 'simulation_result';
+  // await addViewGeom(view, resultSIM, canvasTexture, coords[0][0], 'simulation_result')
+  removeViewerGroup(view, 'simulation_result')
+  const threeJSGroup = new THREE.Group();
+  threeJSGroup.name = 'simulation_result';
 
-  // const geom = await addGeom(resultSIM)
-  // threeJSGroup.add(geom)
+  const geom = await addGeomSky(resultSIM, canvasTexture, 1)
+  console.log('added view geometry:', geom)
+  threeJSGroup.add(geom)
 
-  // const camTarget = new itowns.Coordinates('EPSG:4326', coords[0][0][0], coords[0][0][1], 0);
-  // const cameraTargetPosition = camTarget.as(view.referenceCrs);
+  const camTarget = new itowns.Coordinates('EPSG:4326', minCoord[2], minCoord[3], 0.1);
+  const cameraTargetPosition = camTarget.as(view.referenceCrs);
 
-  // threeJSGroup.position.copy(cameraTargetPosition);
+  threeJSGroup.position.copy(cameraTargetPosition);
 
-  // itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
-  // threeJSGroup.updateMatrixWorld(true);
+  itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
+  threeJSGroup.updateMatrixWorld(true);
 
-  // view.scene.add(threeJSGroup);
-  // view.notifyChange();
+  view.scene.add(threeJSGroup);
+  view.notifyChange();
 
   if (simulation.id === 'wind') {
     updateWindHUD(resp.wind_stns)
@@ -100,7 +108,7 @@ async function runJSSimulation(view, coords, simulation) {
 
 }
 
-async function runPYSimulation(view, coords, simulation) {
+async function runPYSimulation(view, coords, simulation, gridSize) {
   if (simulation.id === 'sky') {
     return sky(view, coords, simulation)
   } else if (simulation.id === 'ap') {
@@ -124,7 +132,6 @@ async function runPYSimulation(view, coords, simulation) {
   console.log(response)
   const resp = await response.json()
   console.log('response', response)
-  console.log('resp', resp)
   const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
   const extra_info = result.attrib.Get(null, 'extra_info')
 
@@ -172,11 +179,12 @@ async function sky(view, coords, simulation) {
   console.log('coords[0], resp, simulation', coords[0], resp, simulation)
 
   const [result, bottomLeft, colRange, canvas] = raster_to_sim_sky(coords[0], resp, simulation)
+
   const canvasTexture = new THREE.CanvasTexture(canvas)
 
   const threeJSGroup = new THREE.Group();
   threeJSGroup.name = 'simulation_result';
-
+  
   const geom = await addGeomSky(result, canvasTexture, 1) as any
   threeJSGroup.add(geom)
 
