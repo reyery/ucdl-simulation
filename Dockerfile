@@ -1,9 +1,13 @@
 FROM node:lts AS build
 
 WORKDIR /app
-COPY . .
+
+COPY package.json package-lock.json ./
 
 RUN npm ci
+
+COPY . .
+
 RUN npm run build
 
 FROM nginx:alpine
