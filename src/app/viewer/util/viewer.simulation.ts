@@ -70,7 +70,7 @@ async function runJSSimulation(view, coords, simulation, gridSize) {
   // const d1 = await result.io.ExportData(null, 'sim')
   // console.log('~~~~~~____', d1)
 
-  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(coords[0], simulation, resp.result, gridSize)
+  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(coords[0], simulation, resp, gridSize)
   // var link = document.createElement('a');
   // link.download = 'filename.png';
   // link.href = canvas.toDataURL()

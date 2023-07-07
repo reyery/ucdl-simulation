@@ -469,8 +469,8 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     return sim
 }
 
-export async function visResult1(latLongs, simulation, result, gridSize, extraGeom = null) {
-
+export async function visResult1(latLongs, simulation, response, gridSize, extraGeom = null) {
+    const {result, resultIndex, dimension} = response
     const minCoord = [99999, 99999, 99999, 99999];
     // const maxCoord = [-99999, -99999];
     const coords = []
@@ -499,18 +499,32 @@ export async function visResult1(latLongs, simulation, result, gridSize, extraGe
     const sim = new SIMFuncs();
     const surrSim = new SIMFuncs();
 
-    const pos = sim.make.Position(coords)
-    const pgon = sim.make.Polygon(pos)
-    const normal = sim.calc.Normal(pgon, 1)
-    if (normal[2] < 0) {
-        sim.edit.Reverse(pgon)
-    }
+    const pos = sim.make.Position([
+        [minCoord[0], minCoord[1], 0],
+        [minCoord[0] + dimension[0] * gridSize, minCoord[1], 0],
+        [minCoord[0] + dimension[0] * gridSize, minCoord[1] + dimension[1] * gridSize, 0],
+        [minCoord[0], minCoord[1] + dimension[1] * gridSize, 0],
+    ])
+    sim.make.Polygon(pos)
+    // const normal = sim.calc.Normal(pgon, 1)
+    // if (normal[2] < 0) {
+    //     sim.edit.Reverse(pgon)
+    // }
 
-    sim.attrib.Set(pgon, 'type', 'site')
-    sim.attrib.Set(pgon, 'cluster', 0)
+    // sim.attrib.Set(pgon, 'type', 'site')
+    // sim.attrib.Set(pgon, 'cluster', 0)
 
-    const pgons = sim.query.Get('pg', null);
-    const [canvas, offset] = processSite1(sim, pgons, result, simulation, gridSize)
+    // const [canvas, offset] = processSite1(sim, pgons, result, simulation, gridSize)
+    const [canvas, offset] = processSite2(result, resultIndex, dimension, simulation)
+
+    let downloadLink = document.createElement('a');
+    downloadLink.setAttribute('download', 'CanvasAsImage.png');
+    let dataURL = canvas.toDataURL('image/png');
+    let url = dataURL.replace(/^data:image\/png/,'data:application/octet-stream');
+    downloadLink.setAttribute('href', url);
+    downloadLink.click();
+
+    
     const allPgons = sim.query.Get('pg', null);
 
     sim.modify.Move(allPgons, [-minCoord[0], -minCoord[1], 0])
@@ -625,4 +639,19 @@ function processSite1(sim, pgons, results, info, gridSize) {
     // clean up
     sim.edit.Delete(site_bound, 'keep_selected');
     return [canvas, offset]
+}
+function processSite2(result, resultIndex, dimension, info) {
+    const canvas = createCanvas(dimension[0] * 2 , dimension[1] * 2);
+    const context = canvas.getContext("2d");
+    const colorScale = chromaScale(info.col_scale).domain(info.col_range);
+    for (let i = 0; i < result.length; i++) {
+        const index = resultIndex[i];
+        const x = index % dimension[0]
+        const y = dimension[1] - 1 - Math.floor(index / dimension[0])
+        context.fillStyle = colorScale(result[i]).css();
+        // console.log('index, x, y', index, x, y, context.fillStyle)
+        console.log(y == 0, y < 0, y >= dimension[1])
+        context.fillRect(x * 2, y * 2, 2, 2);
+    }
+    return [canvas, [0, 0]]
 }
