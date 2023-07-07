@@ -401,7 +401,7 @@ export async function simConvert(latLongs) {
     return sim
 }
 
-export async function visResult(latLongs, simulation, result, extraGeom = null) {
+export async function visResult(latLongs, simulation, result, surrounding = null) {
 
     const minCoord = [99999, 99999];
     const maxCoord = [-99999, -99999];
@@ -448,8 +448,8 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     sim.visualize.Gradient(sens_pgons, 'data', simulation.col_range, simulation.col_scale);
 
     let allPgons = sens_pgons
-    if (extraGeom && extraGeom.length > 0) {
-        for (const geom of extraGeom) {
+    if (surrounding && surrounding.length > 0) {
+        for (const geom of surrounding) {
             const ps = sim.make.Position(geom.coord)
             const pg = sim.make.Polygon(ps)
             const pgons = sim.make.Extrude(pg, geom.height, 1, 'quads')
@@ -469,8 +469,8 @@ export async function visResult(latLongs, simulation, result, extraGeom = null) 
     return sim
 }
 
-export async function visResult1(latLongs, simulation, response, gridSize, extraGeom = null) {
-    const {result, resultIndex, dimension} = response
+export async function visResult1(latLongs, simulation, response, gridSize) {
+    const {result, resultIndex, dimension, surrounding} = response
     const minCoord = [99999, 99999, 99999, 99999];
     // const maxCoord = [-99999, -99999];
     const coords = []
@@ -517,20 +517,13 @@ export async function visResult1(latLongs, simulation, response, gridSize, extra
     // const [canvas, offset] = processSite1(sim, pgons, result, simulation, gridSize)
     const [canvas, offset] = processSite2(result, resultIndex, dimension, simulation)
 
-    let downloadLink = document.createElement('a');
-    downloadLink.setAttribute('download', 'CanvasAsImage.png');
-    let dataURL = canvas.toDataURL('image/png');
-    let url = dataURL.replace(/^data:image\/png/,'data:application/octet-stream');
-    downloadLink.setAttribute('href', url);
-    downloadLink.click();
-
     
     const allPgons = sim.query.Get('pg', null);
 
     sim.modify.Move(allPgons, [-minCoord[0], -minCoord[1], 0])
 
-    if (extraGeom && extraGeom.length > 0) {
-        for (const geom of extraGeom) {
+    if (surrounding && surrounding.length > 0) {
+        for (const geom of surrounding) {
             const ps = surrSim.make.Position(geom.coord)
             const pg = surrSim.make.Polygon(ps)
             const pgons = surrSim.make.Extrude(pg, geom.height, 1, 'quads')
@@ -650,7 +643,6 @@ function processSite2(result, resultIndex, dimension, info) {
         const y = dimension[1] - 1 - Math.floor(index / dimension[0])
         context.fillStyle = colorScale(result[i]).css();
         // console.log('index, x, y', index, x, y, context.fillStyle)
-        console.log(y == 0, y < 0, y >= dimension[1])
         context.fillRect(x * 2, y * 2, 2, 2);
     }
     return [canvas, [0, 0]]

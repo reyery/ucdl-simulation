@@ -173,7 +173,7 @@ export async function addGeom(sim: SIMFuncs, texture: any = null, opacity=1) {
     let material_arr
     if (texture) {
       material_arr = new THREE.MeshBasicMaterial({map: texture})
-      // material_arr.transparent = true
+      material_arr.transparent = true
       // material_arr.opacity = opacity
     } else {
       material_arr= [];
