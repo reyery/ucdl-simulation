@@ -1068,7 +1068,10 @@ export class ViewerComponent implements AfterViewInit {
         body: JSON.stringify({
           bounds: bounds
         })
-      })
+      }).catch(ex => {
+        console.log('HTTP ERROR:',ex)
+        return null
+      });
     })
 
     const view = this.view

@@ -103,7 +103,11 @@ export async function getResultLayer(view, simulation, itown_layers) {
 
 async function getAirPollutantResult(view, simulation) {
 
-    const response = await fetch(PY_SERVER + 'get_ap');
+    const response = await fetch(PY_SERVER + 'get_ap').catch(ex => {
+      console.log('HTTP ERROR:',ex)
+      return null
+    });
+    if (!response) { return [simulation.col_range, '']};
     const resp = await response.json()
     console.log('response', response)
     console.log('resp', resp)
