@@ -64,7 +64,11 @@ async function runJSSimulation(view, coords, simulation, gridSize) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(reqBody)
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return ''};
   const resp = await response.json()
   console.log('response', resp)
   // const d1 = await result.io.ExportData(null, 'sim')
@@ -128,7 +132,11 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
     body: JSON.stringify({
       bounds: coords[0]
     })
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return [simulation.col_range, '']};
   console.log(response)
   const resp = await response.json()
   console.log('response', response)
@@ -173,7 +181,11 @@ async function sky(view, coords, simulation) {
     body: JSON.stringify({
       bounds: coords[0]
     })
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return [simulation.col_range, '']};
   const resp = await response.json()
 
   console.log('coords[0], resp, simulation', coords[0], resp, simulation)
@@ -221,7 +233,11 @@ async function ap(view, coords, simulation) {
     body: JSON.stringify({
       bounds: coords[0]
     })
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return [simulation.col_range, '']};
   const resp = await response.json()
   console.log('response', response)
   console.log('resp', resp)

@@ -44,7 +44,11 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(request)
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return }
   const resp = await response.json()
 
   console.log(resp.result)

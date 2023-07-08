@@ -1068,7 +1068,10 @@ export class ViewerComponent implements AfterViewInit {
         body: JSON.stringify({
           bounds: bounds
         })
-      })
+      }).catch(ex => {
+        console.log('HTTP ERROR:',ex)
+        return null
+      });
     })
 
     const view = this.view
@@ -1282,8 +1285,8 @@ export class ViewerComponent implements AfterViewInit {
     const flatBuilding = new itowns.ColorLayer('Buildings_flat', {
       source: wmsSource,
     });
-    // this.view.addLayer(roadLayer);
-    // this.view.addLayer(this.itown_layers['buildings']);
+    this.view.addLayer(roadLayer);
+    this.view.addLayer(this.itown_layers['buildings']);
     this.view.addLayer(flatBuilding);
     return true
   }
