@@ -44,15 +44,18 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(request)
+  }).catch(ex => {
+    console.log('HTTP ERROR:',ex)
+    return null
   });
+  if (!response) { return }
   const resp = await response.json()
 
   console.log(resp.result)
 
   // TODO: add result as textured plane rather than multiple colored squares
   // eval_to_sim()
-  
-  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(simData.simBoundary, simulation, resp.result, gridSize, resp.surrounding)
+  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(simData.simBoundary, simulation, resp, gridSize)
   // var link = document.createElement('a');
   // link.download = 'filename.png';
   // link.href = canvas.toDataURL()
