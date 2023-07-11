@@ -17,7 +17,7 @@ export async function runSimulation(view, polygon, simulation, gridSize) {
   }
   return updateHUD({
     ...simulation,
-    col_range: colorRange ? colorRange : simulation.col_range,
+    col_range: colorRange ? colorRange : (simulation.col_range_label? simulation.col_range_label : simulation.col_range),
     extra_info: extraInfo,
   })
 }
