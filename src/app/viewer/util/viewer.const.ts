@@ -17,6 +17,7 @@ export const SIM_DATA = {
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
+        col_range_label: [0, 100],
         col_scale: ['white','black'],
         unit: '',
         building_type: 'extruded'
@@ -29,6 +30,8 @@ export const SIM_DATA = {
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
+        col_range_label: [100, 0],
+        // col_range1: [7, 0.0375],
         col_scale: ['#EB6E00', 'white'],
         unit: '%',
         building_type: 'extruded',

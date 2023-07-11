@@ -424,7 +424,10 @@ export class ViewerComponent implements AfterViewInit {
 
     // getResultAll(this.view, 'solar')
     addLight(this.view)
-    updateHUD(this.selected_simulation)
+    updateHUD({
+      ...this.selected_simulation,
+      col_range: this.selected_simulation.col_range_label? this.selected_simulation.col_range_label : this.selected_simulation.col_range
+    });
   }
 
   async transformUploadedModel(mode: OL_CTRL_MODE) {
@@ -562,7 +565,10 @@ export class ViewerComponent implements AfterViewInit {
     this.selected_simulation = SIM_DATA[new_sim]
 
     setTimeout(() => {
-      updateHUD(this.selected_simulation);
+      updateHUD({
+        ...this.selected_simulation,
+        col_range: this.selected_simulation.col_range_label? this.selected_simulation.col_range_label : this.selected_simulation.col_range
+      });
     }, 0);
 
     this.toggleElement('sim_select_content', true)
