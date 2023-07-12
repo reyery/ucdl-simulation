@@ -9,7 +9,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build --base-href "$BASE_HREF"
+RUN npm run build -- --base-href $BASE_HREF
 
 FROM nginx:alpine
 
