@@ -162,7 +162,7 @@ export async function removeResultLayer(view) {
     }
 }
 
-export function updateHUD({ id, sim_name, col_range, col_scale, unit, extra_info, desc }: any): string {
+export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, unit, extra_info, desc }: any): string {
     // hide wind rose HUD (hide for simulation that's not wind situations)
     if (id !== 'wind') {
         const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
@@ -177,6 +177,7 @@ export function updateHUD({ id, sim_name, col_range, col_scale, unit, extra_info
     hud_msg += '</div>'
     // create a legend for the Heads Up Display
     const leg_labels: string[] = [];
+    console.log('col_range_rev', col_range_rev)
     const col_range_diff = col_range[1] - col_range[0];
     const num_labels = 11;
     for (let i = 0; i < num_labels; i++) {
@@ -184,7 +185,13 @@ export function updateHUD({ id, sim_name, col_range, col_scale, unit, extra_info
         const val_sf = sim.inl.sigFig(val, 2);
         leg_labels.push(val_sf + ' ' + unit);
     }
-    const hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, col_scale);
+    let hud_leg;
+    if (col_range_rev) {
+        //@ts-ignore
+        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels.toReversed(), col_scale.toReversed());
+    } else {
+        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, col_scale);
+    }
 
     // Heads Up Display
     const hud_elm = document.getElementById('hud') as HTMLDivElement;

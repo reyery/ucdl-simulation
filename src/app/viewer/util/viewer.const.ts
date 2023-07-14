@@ -9,7 +9,8 @@ export const DEFAULT_LONGLAT = [103.854382, 1.295460];
 export const {BUILDING_TILES_URL, JS_SERVER, PY_SERVER } = environment
 export const RESULT_URL = 'assets/result_full/'
 export const MAX_AP_LAYERS = 25
-export const SIM_DATA = {
+
+export const ALL_SIMS = {
     none: {
         id: 'none',
         display_name: 'None',
@@ -18,34 +19,11 @@ export const SIM_DATA = {
         maptype: 'tile',
         col_range: [0, 100],
         col_range_label: [0, 100],
+        col_range_rev: false,
         col_scale: ['white','black'],
         unit: '',
         building_type: 'extruded'
     },
-    sky: {
-        id: 'sky',
-        display_name: 'Urban Heat Island Intensity',
-        sim_name: 'Urban Heat Island Intensity',
-        // desc: '(measured by SVF)',
-        type: 'js',
-        maptype: 'tile',
-        col_range: [0, 100],
-        col_range_label: [100, 0],
-        // col_range1: [7, 0.0375],
-        col_scale: ['#EB6E00', 'white'],
-        unit: '%',
-        building_type: 'extruded',
-        grid_size: 10
-    },
-    // uhi: {
-    //     id: 'uhi',
-    //     sim_name: 'Sky View Factor',
-    //     type: 'js',
-    //     maptype: 'tile',
-    //     col_range: [1, 0],
-    //     unit: '',
-    //     building_type: 'extruded'
-    // },
     uwind: {
         id: 'uwind',
         display_name: 'Urban Wind Permeability',
@@ -54,22 +32,12 @@ export const SIM_DATA = {
         type: 'py',
         maptype: 'shp',
         col_range: [0, 0.75],
+        col_range_label: [100, 0],
+        col_range_rev: true,
         col_scale: ['green','yellow','red'],
-        unit: '',
+        unit: '%',
         building_type: 'flat',
         grid_size: 200,
-    },
-    wind: {
-        id: 'wind',
-        display_name: 'Neighborhood Wind Permeability',
-        sim_name: 'Neighborhood Wind Permeability',
-        type: 'js',
-        maptype: 'tile',
-        col_range: [0, 100],
-        col_scale: ['red','yellow','green'],
-        unit: '%',
-        building_type: 'extruded',
-        grid_size: 10,
     },
     ah: {
         id: 'ah',
@@ -99,6 +67,43 @@ export const SIM_DATA = {
             height: 100
         }
     },
+    sky: {
+        id: 'sky',
+        display_name: 'Urban Heat Island Intensity',
+        sim_name: 'Urban Heat Island Intensity',
+        desc: '(measured by SVF)',
+        type: 'js',
+        maptype: 'tile',
+        col_range: [0, 100],
+        col_range_label: [7, 0],
+        col_range_rev: true,
+        // col_range1: [7, 0.0375],
+        col_scale: ['#EB6E00', 'white'],
+        unit: '',
+        building_type: 'extruded',
+        grid_size: 10
+    },
+    // uhi: {
+    //     id: 'uhi',
+    //     sim_name: 'Sky View Factor',
+    //     type: 'js',
+    //     maptype: 'tile',
+    //     col_range: [1, 0],
+    //     unit: '',
+    //     building_type: 'extruded'
+    // },
+    wind: {
+        id: 'wind',
+        display_name: 'Neighborhood Wind Permeability',
+        sim_name: 'Neighborhood Wind Permeability',
+        type: 'js',
+        maptype: 'tile',
+        col_range: [0, 100],
+        col_scale: ['red','yellow','green'],
+        unit: '%',
+        building_type: 'extruded',
+        grid_size: 10,
+    },
     solar: {
         id: 'solar',
         display_name: 'Solar Exposure',
@@ -112,6 +117,11 @@ export const SIM_DATA = {
         grid_size: 10,
     },
 }
+export const SIM_DATA = {
+    urban: ['uwind', 'ah', 'ap'],
+    neighborhood: ['sky', 'wind', 'solar']
+}
+
 export const GRID_SIZE_SELECTIONS = {
     'py': [
         {gridsize: 200, label: '200m x 200m', type: 'py'},
@@ -124,13 +134,6 @@ export const GRID_SIZE_SELECTIONS = {
     ]
 }
 
-export const SIM_DATA_UPLOAD = {
-    none: SIM_DATA.none,
-    sky: SIM_DATA.sky,
-    // uwind: SIM_DATA.uwind,
-    wind: SIM_DATA.wind,
-    solar: SIM_DATA.solar,
-}
 
 
 

@@ -2,7 +2,7 @@ import { AfterViewInit, Component, HostListener } from '@angular/core';
 import * as itowns from 'itowns';
 import * as THREE from 'three';
 
-import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, SIM_DATA_UPLOAD, GRID_SIZE_SELECTIONS } from './util/viewer.const';
+import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, GRID_SIZE_SELECTIONS, ALL_SIMS } from './util/viewer.const';
 import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
@@ -172,6 +172,7 @@ enum OL_CTRL_MODE {
   upload_scale = 'upload_scale',
   upload_rotate = 'upload_rotate',
 }
+console.log(ALL_SIMS)
 
 @Component({
   selector: 'app-viewer',
@@ -187,16 +188,16 @@ export class ViewerComponent implements AfterViewInit {
   public updatedGrids: Set<string> = new Set();
   public updatedBuildings: Set<string> = new Set();
   public fileQueue: string[] = [];
-  public selected_simulation = SIM_DATA['none'];
-  public sim_data_list = Object.values(SIM_DATA);
-  public sim_data_upload_list = Object.values(SIM_DATA_UPLOAD);
+  public selected_simulation = ALL_SIMS['none'];
+  public all_sims = ALL_SIMS;
+  public sim_data_list = SIM_DATA;
 
   private mousedownTime = null
 
   private olMode = OL_MODE.none
 
   private olCtrlMode = OL_CTRL_MODE.draw_sim_bound
-  public drawSim = SIM_DATA['solar'];
+  public drawSim = ALL_SIMS['solar'];
   public gridSize = GRID_SIZE_SELECTIONS['js'][0]
   public gridSizeSelections = GRID_SIZE_SELECTIONS
 
@@ -550,19 +551,19 @@ export class ViewerComponent implements AfterViewInit {
     }
   }
 
-  changeSim(event: MouseEvent, new_sim: string) {
+  changeSim(event: MouseEvent, newSim: string) {
     event.stopPropagation()
-    if (this.selected_simulation.id === new_sim) {
+    if (this.selected_simulation.id === newSim) {
       this.toggleElement('sim_select_content', true)
       return;
     }
     removeSimulation(this.view)
     const current_sim_div = document.getElementById('current_sim') as HTMLDivElement
     if (current_sim_div) {
-      current_sim_div.innerHTML = new_sim
+      current_sim_div.innerHTML = newSim
     }
     removeResultLayer(this.view)
-    this.selected_simulation = SIM_DATA[new_sim]
+    this.selected_simulation = ALL_SIMS[newSim]
 
     setTimeout(() => {
       updateHUD({
@@ -572,7 +573,7 @@ export class ViewerComponent implements AfterViewInit {
     }, 0);
 
     this.toggleElement('sim_select_content', true)
-    if (new_sim === 'none') {
+    if (newSim === 'none') {
       // this.toggleElement('toggle_openlayers_container', false)
     } else {
       getResultLayer(this.view, this.selected_simulation, this.itown_layers)
@@ -585,9 +586,9 @@ export class ViewerComponent implements AfterViewInit {
     this.switchBuildingLayer(this.selected_simulation.building_type)
   }
 
-  changeDrawSim(event: MouseEvent, new_sim: string) {
+  changeDrawSim(event: MouseEvent, newSim: string) {
     event.stopPropagation()
-    this.drawSim = SIM_DATA[new_sim]
+    this.drawSim = ALL_SIMS[newSim]
     if (this.gridSize.type !== this.drawSim.type) {
       this.gridSize = this.gridSizeSelections[this.drawSim.type][0]
     }

@@ -96,6 +96,12 @@ export function raster_to_sim(bounds, data, info) {
         const allPgons = sim.query.Get('pg', null)
     
         sim.visualize.Gradient(allPgons, 'data', range, info.col_scale);
+
+        console.log(info)
+        if (info.id === 'uwind') {
+            range[0] = range[1] > 0 ? (range[1] * 100 / 0.75) : 0;
+            range[1] = 0
+        }
         return [sim, projWGS84.inverse(extent2.bottom_left), range]
     }
 
