@@ -141,6 +141,7 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
   const resp = await response.json()
   console.log('response', response)
   const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
+  console.log('colRange', colRange)
   const extra_info = result.attrib.Get(null, 'extra_info')
 
   const threeJSGroup = new THREE.Group();
