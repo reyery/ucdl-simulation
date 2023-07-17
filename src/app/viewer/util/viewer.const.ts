@@ -71,7 +71,7 @@ export const ALL_SIMS = {
         id: 'sky',
         display_name: 'Urban Heat Island Intensity',
         sim_name: 'Urban Heat Island Intensity',
-        desc: '(measured by SVF)',
+        desc: '(estimated by Sky View Factor)',
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
@@ -79,7 +79,7 @@ export const ALL_SIMS = {
         col_range_rev: true,
         // col_range1: [7, 0.0375],
         col_scale: ['#EB6E00', 'white'],
-        unit: '',
+        unit: '°C',
         building_type: 'extruded',
         grid_size: 10
     },
@@ -96,6 +96,7 @@ export const ALL_SIMS = {
         id: 'wind',
         display_name: 'Neighborhood Wind Permeability',
         sim_name: 'Neighborhood Wind Permeability',
+        desc: '(estimated by Wind Velocity Ratio)',
         type: 'js',
         maptype: 'tile',
         col_range: [0, 100],
@@ -118,6 +119,8 @@ export const ALL_SIMS = {
     },
 }
 export const SIM_DATA = {
+    whole_singapore: ['sky', 'uwind', 'ah', 'ap'],
+    select_area: ['sky', 'wind', 'solar'],
     urban: ['uwind', 'ah', 'ap'],
     neighborhood: ['sky', 'wind', 'solar']
 }

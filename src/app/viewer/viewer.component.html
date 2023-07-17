@@ -31,7 +31,7 @@
                         role="menuitem" tabindex="-1" (mousedown)="changeSim($event, 'none')">
                         {{all_sims['none'].display_name}}
                     </button>
-                    <button *ngFor="let simID of sim_data_list['urban']"
+                    <button *ngFor="let simID of sim_data_list['whole_singapore']"
                         class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
                         role="menuitem" tabindex="-1" (mousedown)="changeSim($event, simID)">
                         {{all_sims[simID].display_name}}
@@ -97,7 +97,7 @@
                                     role="menuitem" tabindex="-1">
                                     Neighborhood Scale
                                 </button> -->
-                                <button *ngFor="let simID of sim_data_list['neighborhood']"
+                                <button *ngFor="let simID of sim_data_list['select_area']"
                                     class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
                                     role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
                                     {{all_sims[simID].display_name}}
@@ -164,7 +164,7 @@
                                     role="menuitem" tabindex="-1">
                                     Neighborhood Scale
                                 </button> -->
-                                <button *ngFor="let simID of sim_data_list['neighborhood']"
+                                <button *ngFor="let simID of sim_data_list['select_area']"
                                     class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
                                     role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
                                     {{all_sims[simID].display_name}}
