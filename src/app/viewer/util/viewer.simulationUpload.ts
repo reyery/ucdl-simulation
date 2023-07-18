@@ -13,7 +13,7 @@ export async function runSimulation(view, simData, simulation, gridSize) {
 
   console.log('simData', simData)
   if (simulation.type === 'js') {
-    extraInfo = await runJSSimulation(view, simData, simulation, gridSize)
+    [colorRange, extraInfo] = await runJSSimulation(view, simData, simulation, gridSize)
   } else {
     [colorRange, extraInfo] = await runPYSimulation(view, simData, simulation, gridSize)
   }
@@ -25,7 +25,7 @@ export async function runSimulation(view, simData, simulation, gridSize) {
 }
 
 async function runJSSimulation(view, simData, simulation, gridSize) {
-  if (!simData) { return }
+  if (!simData) { return [null, null] }
 
   const session = 'r' + (new Date()).getTime()
   const request = {
@@ -48,14 +48,12 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
     console.log('HTTP ERROR:',ex)
     return null
   });
-  if (!response) { return }
+  if (!response) { [null, null] }
   const resp = await response.json()
-
-  console.log(resp.result)
 
   // TODO: add result as textured plane rather than multiple colored squares
   // eval_to_sim()
-  const [resultSIM, surrSim, canvas, minCoord, offset] = await visResult1(simData.simBoundary, simulation, resp, gridSize)
+  const [resultSIM, surrSim, canvas, minCoord, offset, colRange] = await visResult1(simData.simBoundary, simulation, resp, gridSize)
   // var link = document.createElement('a');
   // link.download = 'filename.png';
   // link.href = canvas.toDataURL()
@@ -84,13 +82,15 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
   threeJSGroup.updateMatrixWorld(true);
 
   view.scene.add(threeJSGroup);
-  view.notifyChange();
+  setTimeout(() => {
+    view.notifyChange();
+  }, 0);
 
   if (simulation.id === 'wind') {
     updateWindHUD(resp.wind_stns)
   }
   const extraInfo = resultSIM.attrib.Get(null, 'extra_info')
-  return extraInfo
+  return [colRange, extraInfo]
 
 }
 
