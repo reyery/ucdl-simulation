@@ -3,13 +3,11 @@ import * as THREE from "three";
 import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
 
 export async function addViewGeom(view: itowns.View, sim: SIMFuncs, viewCoord: number[], geomName: string) {
-  console.log('++++++++++++ add view geometry', geomName, viewCoord)
   removeViewerGroup(view, geomName)
   const threeJSGroup = new THREE.Group();
   threeJSGroup.name = geomName;
 
   const geom = await addGeom(sim)
-  console.log('added view geometry:', geom)
   threeJSGroup.add(geom)
 
   const camTarget = new itowns.Coordinates('EPSG:4326', viewCoord[0], viewCoord[1], 0);
@@ -21,7 +19,9 @@ export async function addViewGeom(view: itowns.View, sim: SIMFuncs, viewCoord: n
   threeJSGroup.updateMatrixWorld(true);
 
   view.scene.add(threeJSGroup);
-  view.notifyChange();
+  setTimeout(() => {
+    view.notifyChange();
+  }, 0);
 
 }
 export async function addGeom(sim: SIMFuncs, texture: any = null, opacity=1) {
@@ -100,7 +100,6 @@ export async function addGeom(sim: SIMFuncs, texture: any = null, opacity=1) {
   }
   
   export function removeSimulation(view) {
-    console.log('~~~~~~~~~ remove simulation')
     removeViewerGroup(view, 'py_sim')
     removeViewerGroup(view, 'simulation_result')
   }

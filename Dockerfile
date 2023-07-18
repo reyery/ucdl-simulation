@@ -3,7 +3,7 @@ FROM node:lts AS build
 WORKDIR /app
 COPY . .
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 RUN npm run build
 
 FROM nginx:alpine

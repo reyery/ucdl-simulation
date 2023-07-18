@@ -172,7 +172,6 @@ enum OL_CTRL_MODE {
   upload_scale = 'upload_scale',
   upload_rotate = 'upload_rotate',
 }
-console.log(ALL_SIMS)
 
 @Component({
   selector: 'app-viewer',
@@ -231,7 +230,6 @@ export class ViewerComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     this.createGeoViewer();
     if (!SHOW_BUILDINGS) return;
-    console.log(this.view)
     setTimeout(() => {
       setLoading(true)
       this.getAllBuildings()
@@ -871,7 +869,6 @@ export class ViewerComponent implements AfterViewInit {
     const mapView = this.map.getView()
     const lookCoord = this.view.controls.getLookAtCoordinate()
     const currentZoom = this.view.controls.getZoom()
-    console.log('currentZoom', currentZoom)
 
     mapView.setZoom(currentZoom + 1)
     mapView.setCenter([lookCoord.x, lookCoord.y]);
@@ -970,7 +967,6 @@ export class ViewerComponent implements AfterViewInit {
 
     const lookCoord = this.view.controls.getLookAtCoordinate()
     const currentZoom = this.view.controls.getZoom()
-    console.log('currentZoom', currentZoom)
     const map = new Map({
       layers: [
         mapLayer,
@@ -1046,13 +1042,13 @@ export class ViewerComponent implements AfterViewInit {
         tooltipCoord = geom.getInteriorPoint().getCoordinates();
         measureTooltipElement.innerHTML = output;
         measureTooltip.setPosition(tooltipCoord);
-        const current = Number(new Date())
-        changeCheck = current
-        setTimeout(() => {
-          if (changeCheck === current) {
-            console.log('!!!!!!!!!!')
-          }
-        }, 200);
+        // const current = Number(new Date())
+        // changeCheck = current
+        // setTimeout(() => {
+        //   if (changeCheck === current) {
+        //     console.log('!!!!!!!!!!')
+        //   }
+        // }, 200);
       });
     })
 
@@ -1140,7 +1136,6 @@ export class ViewerComponent implements AfterViewInit {
   }
 
   async runSimDraw() {
-    console.log('run draw sim!!!')
     const features = this.drawSource.getFeatures()
     if (!features || features.length <= 0) { return }
     setLoading(true)

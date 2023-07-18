@@ -38,7 +38,8 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-              "itowns"
+              "itowns",
+              "rbush"
             ]
           },
           "configurations": {

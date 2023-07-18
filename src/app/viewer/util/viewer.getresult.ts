@@ -135,7 +135,9 @@ async function getAirPollutantResult(view, simulation) {
     // }
 
     view.scene.add(threeJSGroup);
-    view.notifyChange();
+    setTimeout(() => {
+        view.notifyChange();
+    }, 0);
     return [colRange, extra_info]
 
 }
@@ -166,7 +168,6 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
     // hide wind rose HUD (hide for simulation that's not wind situations)
     if (id !== 'wind') {
         const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
-        console.log('____________ update ')
         if (hud_wind_elm && !hud_wind_elm.classList.contains('hidden')) {
             hud_wind_elm.classList.add('hidden')
         }
@@ -177,7 +178,6 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
     hud_msg += '</div>'
     // create a legend for the Heads Up Display
     const leg_labels: string[] = [];
-    console.log('col_range_rev', col_range_rev)
     const col_range_diff = col_range[1] - col_range[0];
     const num_labels = 11;
     for (let i = 0; i < num_labels; i++) {

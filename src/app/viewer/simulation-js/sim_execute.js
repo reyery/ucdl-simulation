@@ -474,7 +474,6 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     const minCoord = [99999, 99999, 99999, 99999];
     // const maxCoord = [-99999, -99999];
     const coords = []
-    console.log('latLongs', latLongs)
     for (const latlong of latLongs) {
         const coord = [ ...proj_obj.forward(latlong), 0]
         minCoord[0] = Math.min(coord[0], minCoord[0])
@@ -488,7 +487,6 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     for (let i = 0; i < coords.length; i++) {
         if (coords[i][1] === minCoord[1]) {
             const splitted = coords.splice(0, i)
-            console.log(splitted)
             for (const item of splitted) {
                 coords.push(item)
             }
@@ -498,7 +496,6 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
 
     const sim = new SIMFuncs();
     const surrSim = new SIMFuncs();
-
     const pos = sim.make.Position([
         [minCoord[0], minCoord[1], 0],
         [minCoord[0] + dimension[0] * gridSize, minCoord[1], 0],
@@ -515,7 +512,8 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     // sim.attrib.Set(pgon, 'cluster', 0)
 
     // const [canvas, offset] = processSite1(sim, pgons, result, simulation, gridSize)
-    const [canvas, offset] = processSite2(result, resultIndex, dimension, simulation)
+    const processedResult = processResult(result, simulation)
+    const [canvas, offset, colRange] = processSite2(processedResult, resultIndex, dimension, simulation)
 
     
     const allPgons = sim.query.Get('pg', null);
@@ -539,7 +537,7 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
         const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
         sim.attrib.Set(null, 'extra_info', extra_info)
     } 
-    return [sim, surrSim, canvas, minCoord, offset]
+    return [sim, surrSim, canvas, minCoord, offset, colRange]
 }
 
 function processSite(sim, pgons) {
@@ -636,7 +634,20 @@ function processSite1(sim, pgons, results, info, gridSize) {
 function processSite2(result, resultIndex, dimension, info) {
     const canvas = createCanvas(dimension[0] * 2 , dimension[1] * 2);
     const context = canvas.getContext("2d");
-    const colorScale = chromaScale(info.col_scale).domain(info.col_range);
+    let minmax = [100000, -100000];
+    for (let i = 0; i < result.length; i++) {
+        if (result[i] < minmax[0]) { minmax[0] = result[i] }
+        if (result[i] > minmax[1]) { minmax[1] = result[i] }
+    }
+    if (minmax[0] === minmax[1]) {
+        minmax[0] = info.col_range[0]
+        minmax[1] = info.col_range[1]
+    }
+    if (info.col_range_rev) {
+        minmax.reverse()
+    }
+    const colorScale = chromaScale(info.col_scale).domain(minmax);
+
     for (let i = 0; i < result.length; i++) {
         const index = resultIndex[i];
         const x = index % dimension[0]
@@ -645,5 +656,23 @@ function processSite2(result, resultIndex, dimension, info) {
         // console.log('index, x, y', index, x, y, context.fillStyle)
         context.fillRect(x * 2, y * 2, 2, 2);
     }
-    return [canvas, [0, 0]]
+    return [canvas, [0, 0], minmax]
+}
+function processResult(result, info) {
+    if (info.id === 'sky') {
+        const processedResult = []
+        for (const r of result) {
+            processedResult.push(7.13 - (6.51 * r / 100))
+        }
+        return processedResult
+    } else if (info.id === 'wind') {
+        const processedResult = []
+        for (const r of result) {
+            let val = 0.3 - ((100 - r) / 300)
+            if (val <= 0) { val = 0 }
+            processedResult.push(val)
+        }
+        return processedResult
+    }
+    return result
 }
