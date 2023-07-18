@@ -268,7 +268,6 @@ export class ViewerComponent implements AfterViewInit {
     if (!sim_container.classList.contains('hidden')) {
       let target = event.target as HTMLElement
       while (true) {
-        console.log(target)
         if (target.id === 'drawsim_select_container' || target.id === 'drawsim_select_upload_container') {
           break
         }
@@ -1026,7 +1025,6 @@ export class ViewerComponent implements AfterViewInit {
     });
 
     draw.on('drawstart', (data) => {
-      console.log('draw start', data)
       drawSource.clear()
       // set sketch
       createMeasureTooltip()
@@ -1053,7 +1051,6 @@ export class ViewerComponent implements AfterViewInit {
     })
 
     draw.on('drawend', (data) => {
-      console.log('draw end', data)
       data.feature.set('draw_type', 'sim_bound')
       //@ts-ignore
       const bounds = data.feature.getGeometry().getCoordinates()[0]
