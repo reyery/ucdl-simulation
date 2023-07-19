@@ -7,6 +7,7 @@ import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
 import { addGeom, addGeomSky, addViewGeom, removeViewerGroup } from "./viewer.threejs";
 import GeoJSON from 'ol/format/GeoJSON.js';
+import { fetchData } from "./viewer.fetch";
 
 export async function runSimulation(view, simData, simulation, gridSize) {
   let extraInfo, colorRange
@@ -38,18 +39,15 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
   }
   if (simData.simBoundary)
   console.log('request:', request)
-  const response = await fetch(JS_SERVER + simulation.id + '_upload', {
+  const resp = await fetchData(JS_SERVER + simulation.id + '_upload', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(request)
-  }).catch(ex => {
-    console.log('HTTP ERROR:',ex)
-    return null
-  });
-  if (!response) { [null, null] }
-  const resp = await response.json()
+  })
+  if (!resp) { return [null, '']};
+
 
   // TODO: add result as textured plane rather than multiple colored squares
   // eval_to_sim()

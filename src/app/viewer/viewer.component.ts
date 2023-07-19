@@ -8,9 +8,6 @@ import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
 import { addViewGeom, removeSimulation, removeViewerGroup } from './util/viewer.threejs';
 
-import proj4 from 'proj4';
-import * as shapefile from 'shapefile';
-
 import Map from 'ol/Map.js';
 import TileLayer from 'ol/layer/Tile.js';
 import TileWMS from 'ol/source/TileWMS.js';
@@ -252,7 +249,6 @@ export class ViewerComponent implements AfterViewInit {
     if (!select_container.classList.contains('hidden')) {
       let target = event.target as HTMLElement
       while (true) {
-        console.log(target)
         if (target.id === 'sim_select_container') {
           break
         }
