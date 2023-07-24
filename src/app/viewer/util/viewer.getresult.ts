@@ -5,6 +5,7 @@ import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
 import { scale as chromaScale } from 'chroma-js';
 import { addGeom } from './viewer.threejs';
 import { ap_to_sim } from "../simulation-js/sim_convert_py_result"
+import { fetchData } from './viewer.fetch';
 
 const sim = new SIMFuncs()
 
@@ -103,14 +104,16 @@ export async function getResultLayer(view, simulation, itown_layers) {
 
 async function getAirPollutantResult(view, simulation) {
 
-    const response = await fetch(PY_SERVER + 'get_ap').catch(ex => {
-      console.log('HTTP ERROR:',ex)
-      return null
-    });
-    if (!response) { return [simulation.col_range, '']};
-    const resp = await response.json()
-    console.log('response', response)
-    console.log('resp', resp)
+    // const response = await fetch(PY_SERVER + 'get_ap').catch(ex => {
+    //   console.log('HTTP ERROR:',ex)
+    //   return null
+    // });
+    // if (!response) { return [simulation.col_range, '']};
+    // const resp = await response.json()
+    // console.log('response', response)
+    // console.log('resp', resp)
+    const resp = await fetchData(PY_SERVER + 'get_ap')
+    if (!resp) { return [simulation.col_range, '']};
 
     const [result, bottomLeft, colRange] = ap_to_sim(resp, simulation)
     const extra_info = result.attrib.Get(null, 'extra_info')

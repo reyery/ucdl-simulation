@@ -6,6 +6,7 @@ import { SIMFuncs } from "@design-automation/mobius-sim-funcs";
 import { updateHUD, updateWindHUD } from "./viewer.getresult";
 import { JS_SERVER, PY_SERVER } from "./viewer.const";
 import { addGeom, addGeomSky, addViewGeom, removeViewerGroup } from "./viewer.threejs";
+import { fetchData } from "./viewer.fetch";
 
 export async function runSimulation(view, polygon, simulation, gridSize) {
   removeViewerGroup(view, 'upload_model')
@@ -58,18 +59,14 @@ async function runJSSimulation(view, coords, simulation, gridSize) {
     session: session
   }
   console.log('reqBody', reqBody)
-  const response = await fetch(JS_SERVER + simulation.id, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(reqBody)
-  }).catch(ex => {
-    console.log('HTTP ERROR:',ex)
-    return null
-  });
-  if (!response) { return [null, '']};
-  const resp = await response.json()
+  const resp = await fetchData(JS_SERVER + simulation.id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(reqBody)
+    })
+  if (!resp) { return [simulation.col_range, '']};
   console.log('response', resp)
   // const d1 = await result.io.ExportData(null, 'sim')
   // console.log('~~~~~~____', d1)
@@ -125,7 +122,7 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
   console.log('request', PY_SERVER + simulation.id, JSON.stringify({
     bounds: coords[0],
   }))
-  const response = await fetch(PY_SERVER + simulation.id, {
+  const resp = await fetchData(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -133,14 +130,11 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
     body: JSON.stringify({
       bounds: coords[0]
     })
-  }).catch(ex => {
-    console.log('HTTP ERROR:',ex)
-    return null
-  });
-  if (!response) { return [simulation.col_range, '']};
-  console.log(response)
-  const resp = await response.json()
-  console.log('response', response)
+  })
+  if (!resp) { return [simulation.col_range, '']};
+
+
+  // console.log('response', response)
   const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
   console.log('colRange', colRange)
   const extra_info = result.attrib.Get(null, 'extra_info')
@@ -177,7 +171,7 @@ async function sky(view, coords, simulation) {
   console.log(JSON.stringify({
     bounds: coords[0]
   }))
-  const response = await fetch(PY_SERVER + simulation.id, {
+  const resp = await fetchData(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -185,14 +179,8 @@ async function sky(view, coords, simulation) {
     body: JSON.stringify({
       bounds: coords[0]
     })
-  }).catch(ex => {
-    console.log('HTTP ERROR:',ex)
-    return null
-  });
-  if (!response) { return [simulation.col_range, '']};
-  const resp = await response.json()
-
-  console.log('coords[0], resp, simulation', coords[0], resp, simulation)
+  })
+  if (!resp) { return [simulation.col_range, '']};
 
   const [result, bottomLeft, colRange, canvas] = raster_to_sim_sky(coords[0], resp, simulation)
 
@@ -231,7 +219,7 @@ async function sky(view, coords, simulation) {
 async function ap(view, coords, simulation) {
   if (!coords || coords.length === 0) { return [null, null] }
 
-  const response = await fetch(PY_SERVER + simulation.id, {
+  const resp = await fetchData(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -239,14 +227,9 @@ async function ap(view, coords, simulation) {
     body: JSON.stringify({
       bounds: coords[0]
     })
-  }).catch(ex => {
-    console.log('HTTP ERROR:',ex)
-    return null
-  });
-  if (!response) { return [simulation.col_range, '']};
-  const resp = await response.json()
-  console.log('response', response)
-  console.log('resp', resp)
+  })
+  if (!resp) { return [simulation.col_range, '']};
+
   const [result, bottomLeft, colRange] = raster_to_sim_ap(coords[0], resp, simulation)
   const extra_info = result.attrib.Get(null, 'extra_info')
 
