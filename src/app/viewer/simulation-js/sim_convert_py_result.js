@@ -145,8 +145,8 @@ export function raster_to_sim_sky(bounds, data, info) {
     const bound_coords = []
     for (const latlong of bounds) {
         const coord = [ ...projWGS84.forward(latlong), 0]
-        coord[0] -= extent2.bottom_left[0]
-        coord[1] -= extent2.bottom_left[1]
+        coord[0] = coord[0] - extent2.bottom_left[0]
+        coord[1] = coord[1] - extent2.bottom_left[1] + 2
         bound_coords.push(coord)
     }
     const bound_ps = sim.make.Position(bound_coords)
@@ -156,7 +156,7 @@ export function raster_to_sim_sky(bounds, data, info) {
         sim.edit.Reverse(bound_pgon)
     }
 
-    const canvas = createCanvas(data.data[0].length * 2, data.data.length * 2);
+    const canvas = createCanvas(data.data[0].length, data.data.length);
     const context = canvas.getContext("2d");
 
     let boundShape = new Shape([bound_coords.map(coord => {return {X: coord[0], Y: coord[1]}})])
@@ -170,13 +170,6 @@ export function raster_to_sim_sky(bounds, data, info) {
     // const imgDataArr = []
 
     const colorScale = chromaScale(info.col_scale).domain(info.col_range);
-    function pyColor(properties) {
-        const val = properties.value
-        //@ts-ignore
-        const colors = colorScale(val).num();
-        console.log(colors)
-        return new THREE.Color(colors);
-    }
 
     for (let i = 0; i < data.data.length; i++) {
         const r = data.data.length - 1 - i
@@ -200,17 +193,17 @@ export function raster_to_sim_sky(bounds, data, info) {
                 if (check) { break; }
             }
             if (check) {
-                const v = data.data[i][j]
+                const v = 7.13 - (6.51 * data.data[i][j])
                 values.push(v)
                 context.fillStyle = colorScale(v).css();
-                context.fillRect(j * 2 - 0.5, i * 2 - 0.5, 2, 2);
+                context.fillRect(j, i, 1, 1);
             }
         }
     }
 
     console.log('bound_coords', bound_coords)
 
-    const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
+    const UHII = Math.round(((values.reduce((partialSum, a) => partialSum + a, 0)) / values.length) * 10) / 10
     const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
     sim.attrib.Set(null, 'extra_info', extra_info)
 
