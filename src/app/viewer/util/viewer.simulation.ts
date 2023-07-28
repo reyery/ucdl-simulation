@@ -11,7 +11,7 @@ import { fetchData } from "./viewer.fetch";
 export async function runSimulation(view, polygon, simulation, gridSize) {
   removeViewerGroup(view, 'upload_model')
   let extraInfo, colorRange
-  if (simulation.type === 'js') {
+  if (simulation.type.startsWith('js')) {
     [colorRange, extraInfo] = await runJSSimulation(view, polygon, simulation, gridSize)
   } else {
     [colorRange, extraInfo] = await runPYSimulation(view, polygon, simulation, gridSize)
@@ -119,17 +119,17 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
 
   if (!coords || coords.length === 0) { return [null, null] }
 
-  console.log('request', PY_SERVER + simulation.id, JSON.stringify({
+  const request = {
     bounds: coords[0],
-  }))
+    grid_size: gridSize
+  }
+  console.log('request', PY_SERVER + simulation.id, request)
   const resp = await fetchData(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      bounds: coords[0]
-    })
+    body: JSON.stringify(request)
   })
   if (!resp) { return [simulation.col_range, '']};
 

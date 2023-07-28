@@ -115,6 +115,20 @@ export const ALL_SIMS = {
         building_type: 'extruded',
         grid_size: 10,
     },
+    wind1: {
+        id: 'wind',
+        display_name: 'Neighborhood Wind Permeability',
+        sim_name: 'Neighborhood Wind Permeability',
+        desc: '(estimated by Wind Velocity Ratio)',
+        type: 'py1',
+        maptype: 'tile',
+        col_range: [0, 0.3],
+        col_scale: ['red','yellow','green'],
+        // col_range_rev: true,
+        unit: '',
+        building_type: 'extruded',
+        grid_size: 10,
+    },
     solar: {
         id: 'solar',
         display_name: 'Solar Exposure',
@@ -130,14 +144,20 @@ export const ALL_SIMS = {
 }
 export const SIM_DATA = {
     whole_singapore: ['sky', 'uwind', 'ah', 'ap'],
-    select_area: ['sky1', 'wind', 'solar'],
+    select_area: ['sky1', 'wind1', 'solar'],
     urban: ['uwind', 'ah', 'ap'],
     neighborhood: ['sky', 'wind', 'solar']
 }
 
 export const GRID_SIZE_SELECTIONS = {
     'py': [
-        {gridsize: 200, label: '1m x 1m', type: 'py'},
+        {gridsize: 1, label: '1m x 1m', type: 'py'},
+    ],
+    'py1': [
+        {gridsize: 10, label: '10m x 10m', type: 'py'},
+        {gridsize: 5, label: '5m x 5m', type: 'py'},
+        {gridsize: 2, label: '2m x 2m', type: 'py'},
+        {gridsize: 1, label: '1m x 1m', type: 'py'},
     ],
     'js': [
         {gridsize: 10, label: '10m x 10m', type: 'js'},

@@ -427,8 +427,6 @@ export async function visResult(latLongs, simulation, result, surrounding = null
     const pgons = sim.query.Get('pg', null);
     processSite(sim, pgons)
     
-    console.log('________', await sim.io.ExportData(null, 'sim'))
-    
     const sens_pgons = sim.query.Filter(sim.query.Get('pg', null), 'type', '==', 'ground');
     console.log('sens_pgons', sens_pgons, sens_pgons.length)
     console.log('result', result)
@@ -476,14 +474,17 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     const coords = []
     for (const latlong of latLongs) {
         const coord = [ ...proj_obj.forward(latlong), 0]
-        minCoord[0] = Math.min(coord[0], minCoord[0])
-        minCoord[1] = Math.min(coord[1], minCoord[1])
-        minCoord[2] = Math.min(minCoord[2], latlong[0])
-        minCoord[3] = Math.min(minCoord[3], latlong[1])
-        // maxCoord[0] = Math.max(coord[0], maxCoord[0])
-        // maxCoord[1] = Math.max(coord[1], maxCoord[1])
+        minCoord[0] = Math.min(Math.floor(coord[0] / gridSize) * gridSize, minCoord[0])
+        minCoord[1] = Math.min(Math.floor(coord[1] / gridSize) * gridSize, minCoord[1])    
+        // minCoord[0] = Math.min(coord[0], minCoord[0])
+        // minCoord[1] = Math.min(coord[1], minCoord[1])
+        // minCoord[2] = Math.min(minCoord[2], latlong[0])
+        // minCoord[3] = Math.min(minCoord[3], latlong[1])
         coords.push(coord)
     }
+    const convertedMinCoord = proj_obj.inverse([minCoord[0], minCoord[1]])
+    minCoord[2] = convertedMinCoord[0]
+    minCoord[3] = convertedMinCoord[1]
     for (let i = 0; i < coords.length; i++) {
         if (coords[i][1] === minCoord[1]) {
             const splitted = coords.splice(0, i)
@@ -665,14 +666,15 @@ function processResult(result, info) {
             processedResult.push(7.13 - (6.51 * r / 100))
         }
         return processedResult
-    } else if (info.id === 'wind') {
-        const processedResult = []
-        for (const r of result) {
-            let val = 0.3 - ((100 - r) / 300)
-            if (val <= 0) { val = 0 }
-            processedResult.push(val)
-        }
-        return processedResult
+    // } else if (info.id === 'wind') {
+    //     const processedResult = []
+    //     for (const r of result) {
+    //         // let val = -1.64 * (100 - r) / 100 + 0.28
+    //         let val = 0.3 - ((100 - r) / 300)
+    //         if (val <= 0) { val = 0 }
+    //         processedResult.push(val)
+    //     }
+    //     return processedResult
     }
     return result
 }
