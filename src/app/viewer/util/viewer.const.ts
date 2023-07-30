@@ -85,15 +85,22 @@ export const ALL_SIMS = {
         building_type: 'extruded',
         grid_size: 10
     },
-    // uhi: {
-    //     id: 'uhi',
-    //     sim_name: 'Sky View Factor',
-    //     type: 'js',
-    //     maptype: 'tile',
-    //     col_range: [1, 0],
-    //     unit: '',
-    //     building_type: 'extruded'
-    // },
+    sky1: {
+        id: 'sky',
+        display_name: 'Urban Heat Island Intensity',
+        sim_name: 'Urban Heat Island Intensity',
+        desc: '(estimated by Sky View Factor)',
+        type: 'py',
+        maptype: 'tile',
+        col_range: [7, 0],
+        col_range_label: [7, 0],
+        col_range_rev: true,
+        // col_range1: [7, 0.0375],
+        col_scale: ['#EB6E00', 'white'],
+        unit: '°C',
+        building_type: 'extruded',
+        grid_size: 10
+    },
     wind: {
         id: 'wind',
         display_name: 'Neighborhood Wind Permeability',
@@ -123,14 +130,14 @@ export const ALL_SIMS = {
 }
 export const SIM_DATA = {
     whole_singapore: ['sky', 'uwind', 'ah', 'ap'],
-    select_area: ['sky', 'wind', 'solar'],
+    select_area: ['sky1', 'wind', 'solar'],
     urban: ['uwind', 'ah', 'ap'],
     neighborhood: ['sky', 'wind', 'solar']
 }
 
 export const GRID_SIZE_SELECTIONS = {
     'py': [
-        {gridsize: 200, label: '200m x 200m', type: 'py'},
+        {gridsize: 200, label: '1m x 1m', type: 'py'},
     ],
     'js': [
         {gridsize: 10, label: '10m x 10m', type: 'js'},
