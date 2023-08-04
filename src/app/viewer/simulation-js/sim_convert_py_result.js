@@ -61,6 +61,7 @@ export function raster_to_sim(bounds, data, info) {
     }
 
     const keepPgons = []
+    const range = [999999, -999999]
     for (let row = 0; row < data.data.length; row++) {
         const disp_row = data.data.length - 1 - row
         for (let col = 0; col < data.data[row].length; col ++) {
@@ -71,6 +72,8 @@ export function raster_to_sim(bounds, data, info) {
                 [width * (col + 1), height * (disp_row + 1), 0],
                 [width * col,       height * (disp_row + 1), 0]
             ]
+            range[0] = Math.min(range[0], data.data[row][col] )
+            range[1] = Math.max(range[1], data.data[row][col] )
             const ps = sim.make.Position(pos)
             const pg = sim.make.Polygon(ps)
             const bool = sim.poly2d.Boolean(bound_pgon, pg, 'intersect')
@@ -80,7 +83,7 @@ export function raster_to_sim(bounds, data, info) {
             }
         }
     }
-    const range = [info.col_range[0], info.col_range[0]]
+    // const range = [info.col_range[0], info.col_range[0]]
     sim.edit.Delete(keepPgons, 'keep_selected')
     const pgons = sim.query.Get('pg', null)
 
@@ -104,13 +107,14 @@ export function raster_to_sim(bounds, data, info) {
         }
         return [sim, projWGS84.inverse(extent2.bottom_left), range]
     }
+    console.log('range', range)
 
-    sim.visualize.Gradient(pgons, 'data', info.col_range, info.col_scale);
-    const values = sim.attrib.Get(pgons, 'data')
-    const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
-    const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
-    sim.attrib.Set(null, 'extra_info', extra_info)
-    console.log(UHII, extra_info)
+    sim.visualize.Gradient(pgons, 'data', range, info.col_scale);
+    // const values = sim.attrib.Get(pgons, 'data')
+    // const UHII = Math.round((-6.51 * (values.reduce((partialSum, a) => partialSum + a, 0)) / values.length + 7.13) * 10) / 10
+    // const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
+    // sim.attrib.Set(null, 'extra_info', extra_info)
+    // console.log(UHII, extra_info)
     return [sim, projWGS84.inverse(extent2.bottom_left), info.col_range]
 }
 
