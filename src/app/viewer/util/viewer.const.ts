@@ -144,7 +144,7 @@ export const ALL_SIMS = {
 }
 export const SIM_DATA = {
     whole_singapore: ['sky', 'uwind', 'ah', 'ap'],
-    select_area: ['sky1', 'wind1', 'solar'],
+    select_area: ['sky1', 'wind', 'solar'],
     urban: ['uwind', 'ah', 'ap'],
     neighborhood: ['sky', 'wind', 'solar']
 }
