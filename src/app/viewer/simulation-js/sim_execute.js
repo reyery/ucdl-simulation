@@ -468,41 +468,46 @@ export async function visResult(latLongs, simulation, result, surrounding = null
 }
 
 export async function visResult1(latLongs, simulation, response, gridSize) {
-    const {result, resultIndex, dimension, surrounding} = response
-    const minCoord = [99999, 99999, 99999, 99999];
-    // const maxCoord = [-99999, -99999];
-    const coords = []
-    for (const latlong of latLongs) {
-        const coord = [ ...proj_obj.forward(latlong), 0]
-        minCoord[0] = Math.min(Math.floor(coord[0] / gridSize) * gridSize, minCoord[0])
-        minCoord[1] = Math.min(Math.floor(coord[1] / gridSize) * gridSize, minCoord[1])    
-        // minCoord[0] = Math.min(coord[0], minCoord[0])
-        // minCoord[1] = Math.min(coord[1], minCoord[1])
-        // minCoord[2] = Math.min(minCoord[2], latlong[0])
-        // minCoord[3] = Math.min(minCoord[3], latlong[1])
-        coords.push(coord)
-    }
-    const convertedMinCoord = proj_obj.inverse([minCoord[0], minCoord[1]])
-    minCoord[2] = convertedMinCoord[0]
-    minCoord[3] = convertedMinCoord[1]
-    for (let i = 0; i < coords.length; i++) {
-        if (coords[i][1] === minCoord[1]) {
-            const splitted = coords.splice(0, i)
-            for (const item of splitted) {
-                coords.push(item)
-            }
-            break;
-        }
-    }
-
+    const {result, resultIndex, dimension, surrounding, extent} = response
     const sim = new SIMFuncs();
     const surrSim = new SIMFuncs();
+    let minCoord = [99999, 99999, 99999, 99999];
+
+    if (extent) {
+        minCoord = extent
+    } else {
+        // const maxCoord = [-99999, -99999];
+        // const coords = []
+        for (const latlong of latLongs) {
+            const coord = [ ...proj_obj.forward(latlong), 0]
+            minCoord[0] = Math.min(Math.floor(coord[0] / gridSize) * gridSize, minCoord[0])
+            minCoord[1] = Math.min(Math.floor(coord[1] / gridSize) * gridSize, minCoord[1])    
+            // minCoord[0] = Math.min(coord[0], minCoord[0])
+            // minCoord[1] = Math.min(coord[1], minCoord[1])
+            // minCoord[2] = Math.min(minCoord[2], latlong[0])
+            // minCoord[3] = Math.min(minCoord[3], latlong[1])
+            // coords.push(coord)
+        }
+        const convertedMinCoord = proj_obj.inverse([minCoord[0], minCoord[1]])
+        minCoord[2] = convertedMinCoord[0]
+        minCoord[3] = convertedMinCoord[1]
+        // for (let i = 0; i < coords.length; i++) {
+        //     if (coords[i][1] === minCoord[1]) {
+        //         const splitted = coords.splice(0, i)
+        //         for (const item of splitted) {
+        //             coords.push(item)
+        //         }
+        //         break;
+        //     }
+        // }
+    
+    }
     const pos = sim.make.Position([
         [minCoord[0], minCoord[1], 0],
         [minCoord[0] + dimension[0] * gridSize, minCoord[1], 0],
         [minCoord[0] + dimension[0] * gridSize, minCoord[1] + dimension[1] * gridSize, 0],
         [minCoord[0], minCoord[1] + dimension[1] * gridSize, 0],
-    ])
+    ])    
     sim.make.Polygon(pos)
     // const normal = sim.calc.Normal(pgon, 1)
     // if (normal[2] < 0) {
@@ -520,6 +525,7 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     const allPgons = sim.query.Get('pg', null);
 
     sim.modify.Move(allPgons, [-minCoord[0], -minCoord[1], 0])
+    console.log(await sim.io.ExportData(null, 'sim'))
 
     if (surrounding && surrounding.length > 0) {
         for (const geom of surrounding) {
