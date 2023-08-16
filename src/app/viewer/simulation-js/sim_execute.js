@@ -643,10 +643,15 @@ function processSite2(result, resultIndex, dimension, info) {
     const context = canvas.getContext("2d");
     let minmax = [100000, -100000];
     for (let i = 0; i < result.length; i++) {
-        if (result[i] < minmax[0]) { minmax[0] = result[i] }
+        if (result[i] < minmax[0]) {
+            if (info.id === 'wind' && result[i] === 0) {
+            } else {
+                minmax[0] = result[i]
+            }
+        }
         if (result[i] > minmax[1]) { minmax[1] = result[i] }
     }
-    if (minmax[0] === minmax[1]) {
+    if (minmax[1] - minmax[0] < 0.01) {
         minmax[0] = info.col_range[0]
         minmax[1] = info.col_range[1]
     }
