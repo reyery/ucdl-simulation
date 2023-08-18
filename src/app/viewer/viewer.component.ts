@@ -193,7 +193,7 @@ export class ViewerComponent implements AfterViewInit {
   private olMode = OL_MODE.none
 
   private olCtrlMode = OL_CTRL_MODE.draw_sim_bound
-  public drawSim = ALL_SIMS['solar'];
+  public drawSim = ALL_SIMS['wind'];
   public gridSize = GRID_SIZE_SELECTIONS['js'][0]
   public gridSizeSelections = GRID_SIZE_SELECTIONS
 

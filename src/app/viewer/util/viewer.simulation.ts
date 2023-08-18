@@ -51,7 +51,7 @@ export async function runSimulation(view, polygon, simulation, gridSize) {
 
 async function runJSSimulation(view, coords, simulation, gridSize) {
   if (!coords || coords.length === 0) { return [null, null] }
-
+  
   const session = 'r' + (new Date()).getTime()
   const reqBody = {
     bounds: coords[0],

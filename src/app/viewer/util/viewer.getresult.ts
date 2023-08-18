@@ -167,7 +167,7 @@ export async function removeResultLayer(view) {
     }
 }
 
-export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, unit, extra_info, desc }: any): string {
+export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, unit, extra_info, desc, footnote }: any): string {
     // hide wind rose HUD (hide for simulation that's not wind situations)
     if (id !== 'wind') {
         const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
@@ -177,7 +177,8 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
     }
 
     let hud_msg = '<div style="line-height:1.1; font-weight: 500; font-size: large;">'
-    hud_msg += '<h3>' + sim_name + (desc ? (' ' + desc) : '') + '</h3>';
+    hud_msg += '<h3>' + sim_name + '</h3>';
+    hud_msg += `<div style='font-size: 0.9rem; line-height: 1.1rem; font-style: italic; font-weight: 400;'>${desc ? desc : ''}</div>`
     hud_msg += '</div>'
     // create a legend for the Heads Up Display
     const leg_labels: string[] = [];
@@ -195,6 +196,10 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
     } else {
         hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, col_scale);
     }
+    let hud_footnote = ''
+    if (footnote) {
+        hud_footnote += `<div style='font-size: 0.75rem; line-height: 1rem; font-style: italic;'>${footnote}</div>`
+    }
 
     // Heads Up Display
     const hud_elm = document.getElementById('hud') as HTMLDivElement;
@@ -206,7 +211,7 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
         } else {
             hud_elm.classList.remove('hidden')
         }
-        hud_elm.innerHTML = hud_msg + hud_leg
+        hud_elm.innerHTML = hud_msg + hud_leg + hud_footnote
         if (extra_info) {
             hud_elm.innerHTML += `${extra_info}`
         }
@@ -216,12 +221,13 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
 }
 
 export function updateWindHUD(wind_stns: string[]) {
-    const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
-    if (hud_wind_elm) {
-        if (hud_wind_elm.classList.contains('hidden')) {
-            hud_wind_elm.classList.remove('hidden')
+    const hud_wind_container_elm = document.getElementById('hud_wind') as HTMLDivElement;
+    if (hud_wind_container_elm) {
+        if (hud_wind_container_elm.classList.contains('hidden')) {
+            hud_wind_container_elm.classList.remove('hidden')
         }
     }
+    const hud_wind_elm = hud_wind_container_elm.children[0]
     while (hud_wind_elm.firstChild) {
         hud_wind_elm.removeChild(hud_wind_elm.firstChild);
     }
