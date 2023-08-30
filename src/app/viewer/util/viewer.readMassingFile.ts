@@ -163,7 +163,6 @@ async function readDAE(file, currentLatLong: number[]) {
     let clipperShape
     loader.load(fileURI, function (collada) {
       const pgonsCoords = getThreeGeomCoords(collada.scene, unit && unit['name'])
-      console.log('data coords:', pgonsCoords)
       for (const pgonC of pgonsCoords) {
         const pos = itownSim.make.Position(pgonC as any)
         const pgon = itownSim.make.Polygon(pos)

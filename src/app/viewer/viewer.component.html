@@ -1,209 +1,296 @@
 <div id="itowns_container" class="w-[100vw] h-[100vh]"></div>
 <div id="openlayers_container" class="w-[100vw] h-[100vh] hidden"></div>
-<div class="absolute z-[500] inline-flex text-left top-1 left-1">
-    <div id="whole_singapore_container" class="grid p-2 bg-white rounded-md bg-opacity-70">
-        <span class="px-1 font-medium">Whole Singapore</span>
-        <div id="sim_select_container" class="relative text-gray-600 ">
-            <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_content')"
-                class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                id="menu-button" aria-expanded="true" aria-haspopup="true">
-                {{selected_simulation.display_name}}
-                <!-- Heroicon name: mini/chevron-down -->
-                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                    fontIcon="expand_more"></mat-icon>
-            </button>
-            <div id="sim_select_content"
-                class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                <div class="py-1" role="none">
-                    <!-- <button
-                        class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                        role="menuitem" tabindex="-1" (mousedown)="changeSim($event, 'none')">
-                        {{all_sims['none'].display_name}}
-                    </button> -->
-                    <!-- <button
-                        class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                        role="menuitem" tabindex="-1">
-                        Urban Scale
-                    </button> -->
-                    <button
-                        class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                        role="menuitem" tabindex="-1" (mousedown)="changeSim($event, 'none')">
-                        {{all_sims['none'].display_name}}
+
+<ng-container *ngIf="isMobile; else SimSelWide">
+    <div class="absolute z-[500] inline-flex text-left top-1 left-1 text-xs lg:text-base">
+        <button type="button" (click)="toggleSelectElmSim($event, 'mobile_menu')"
+            [class]='getButtonClass("olMode", ["draw", "upload"], "inline-flex items-center justify-center w-10 h-10 px-1 py-2 text-xs lg:text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")'
+            title="Draw Area" id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+            <span class="material-symbols-outlined font-[24px] text-gray-600"> menu </span>
+        </button>
+    </div>
+    <div id="mobile_menu"
+        class="absolute z-[500] text-left top-0 left-0 text-xs lg:text-base h-full w-60 bg-slate-300 hidden p-2">
+            <div>
+                <span class="p-1 my-2 font-medium">Whole Singapore</span>
+                <div id="sim_select_container" class="relative text-gray-600 ">
+                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_content')"
+                        class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        {{selected_simulation.display_name}}
+                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                            fontIcon="expand_more"></mat-icon>
                     </button>
-                    <button *ngFor="let simID of sim_data_list['whole_singapore']"
-                        class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                        role="menuitem" tabindex="-1" (mousedown)="changeSim($event, simID)">
-                        {{all_sims[simID].display_name}}
+                    <div id="sim_select_content"
+                        class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <button
+                                class="items-center block w-full px-2 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" (mousedown)="changeSim($event, 'none')">
+                                {{all_sims['none'].display_name}}
+                            </button>
+                            <button *ngFor="let simID of sim_data_list['whole_singapore']"
+                                class="items-center block w-full px-2 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" (mousedown)="changeSim($event, simID)">
+                                {{all_sims[simID].display_name}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <div class="grid content-end grid-rows-1">
+                <span class="px-1 mt-2 font-medium">Area Select</span>
+                <button type="button" (click)="toggleAreaSelect()"
+                    [class]='getButtonClass("olMode", ["draw", "upload"], "inline-flex items-center justify-center w-10 h-10 px-1 py-2 text-xs lg:text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")'
+                    title="Draw Area" id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                    <span class="material-symbols-outlined font-[24px] text-gray-600"> draw </span>
+                </button>
+            </div>
+            <div id="simulation_select_draw" class="hidden">
+                <div id="drawsim_select_container" class="relative text-gray-600">
+                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
+                        class="inline-flex items-center justify-center w-full h-10 mt-1 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        <span>{{drawSim.display_name}}</span>
+                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                            fontIcon="expand_more"></mat-icon>
                     </button>
-                    <!-- <button
-                        class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                        role="menuitem" tabindex="-1">
-                        Neighborhood Scale
+                    <div id="sim_select_apply"
+                        class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <button *ngFor="let simID of sim_data_list['select_area']"
+                                class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
+                                {{all_sims[simID].display_name}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="gridsize_select_container" class="relative mt-1 text-gray-600">
+                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_apply')"
+                        class="inline-flex items-center justify-center w-full h-10 px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        <span>{{gridSize.label}}</span>
+                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                            fontIcon="expand_more"></mat-icon>
                     </button>
-                    <button *ngFor="let simID of sim_data_list['neighborhood']"
-                        class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                        role="menuitem" tabindex="-1" (mousedown)="changeSim($event, simID)">
-                        {{all_sims[simID].display_name}}
-                    </button> -->
+                    <div id="gridsize_select_apply"
+                        class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                (mousedown)="changeGridSize($event, gridSizeSel)">
+                                {{gridSizeSel.label}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" (click)="runSim()"
+                    class='items-center w-20 h-10 p-1 mt-1 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
+                    id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                    Apply
+                </button>    
+            </div>
+            <div id="simulation_select_upload" class="hidden">
+                <div id="drawsim_select_upload_container" class="relative text-gray-600">
+                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_upload_apply')"
+                        class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        <span>{{drawSim.display_name}}</span>
+                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                            fontIcon="expand_more"></mat-icon>
+                    </button>
+                    <div id="sim_select_upload_apply"
+                        class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <button *ngFor="let simID of sim_data_list['select_area']"
+                                class="block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
+                                {{all_sims[simID].display_name}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="gridsize_select_upload_container" class="relative ml-2 text-gray-600">
+                    <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_upload_apply')"
+                        class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        <span>{{gridSize.label}}</span>
+                        <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                            fontIcon="expand_more"></mat-icon>
+                    </button>
+                    <div id="gridsize_select_upload_apply"
+                        class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                (mousedown)="changeGridSize($event, gridSizeSel)">
+                                {{gridSizeSel.label}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" (click)="runSim()"
+                    class='items-center w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
+                    id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                    Apply
+                </button>
+            </div>
+    </div>
+</ng-container>
+<ng-template #SimSelWide>
+    <div class="absolute z-[500] inline-flex text-left top-1 left-1 text-xs lg:text-base">
+        <div id="whole_singapore_container" class="grid p-2 bg-white rounded-md bg-opacity-70">
+            <span class="px-1 font-medium">Whole Singapore</span>
+            <div id="sim_select_container" class="relative text-gray-600 ">
+                <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_content')"
+                    class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                    id="menu-button" aria-expanded="true" aria-haspopup="true">
+                    {{selected_simulation.display_name}}
+                    <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                        fontIcon="expand_more"></mat-icon>
+                </button>
+                <div id="sim_select_content"
+                    class="absolute left-0 z-10 hidden w-32 mt-1 origin-top-right bg-white rounded-md shadow-lg md:w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                    <div class="py-1" role="none">
+                        <button
+                            class="items-center block w-full px-2 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                            role="menuitem" tabindex="-1" (mousedown)="changeSim($event, 'none')">
+                            {{all_sims['none'].display_name}}
+                        </button>
+                        <button *ngFor="let simID of sim_data_list['whole_singapore']"
+                            class="items-center block w-full px-2 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                            role="menuitem" tabindex="-1" (mousedown)="changeSim($event, simID)">
+                            {{all_sims[simID].display_name}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="toggle_openlayers_container" class="grid grid-rows-1 p-2 ml-2 bg-white rounded-md bg-opacity-70">
+            <span class="px-1 font-medium">Area Select</span>
+            <div id="simulation_select_container" class="inline-flex justify-center">
+                <button type="button" (click)="toggleAreaSelect()"
+                    [class]='getButtonClass("olMode", ["draw", "upload"], "inline-flex items-center justify-center w-10 h-10 px-1 py-2 text-xs lg:text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")'
+                    title="Draw Area" id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                    <span class="material-symbols-outlined font-[24px] text-gray-600"> draw </span>
+                </button>
+                <div id="simulation_select_draw" class="hidden ml-2">
+                    <div class="inline-flex">
+                        <div id="drawsim_select_container" class="relative text-gray-600">
+                            <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
+                                class="items-center inline-flex justify-center w-full px-1 py-0.5 md:px-4 md:py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                                id="menu-button" aria-expanded="true" aria-haspopup="true">
+                                <span>{{drawSim.display_name}}</span>
+                                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                    fontIcon="expand_more"></mat-icon>
+                            </button>
+                            <div id="sim_select_apply"
+                                class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                                <div class="py-1" role="none">
+                                    <button *ngFor="let simID of sim_data_list['select_area']"
+                                        class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                        role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
+                                        {{all_sims[simID].display_name}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="gridsize_select_container" class="relative ml-2 text-gray-600">
+                            <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_apply')"
+                                class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                                id="menu-button" aria-expanded="true" aria-haspopup="true">
+                                <span>{{gridSize.label}}</span>
+                                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                    fontIcon="expand_more"></mat-icon>
+                            </button>
+                            <div id="gridsize_select_apply"
+                                class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                                <div class="py-1" role="none">
+                                    <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                        class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                        role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                        (mousedown)="changeGridSize($event, gridSizeSel)">
+                                        {{gridSizeSel.label}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" (click)="runSim()"
+                            class='items-center w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
+                            id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                            Apply
+                        </button>
+                    </div>
+                </div>
+                <div id="simulation_select_upload" class="hidden ml-2">
+                    <div class="inline-flex">
+                        <div id="drawsim_select_upload_container" class="relative text-gray-600">
+                            <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_upload_apply')"
+                                class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                                id="menu-button" aria-expanded="true" aria-haspopup="true">
+                                <span>{{drawSim.display_name}}</span>
+                                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                    fontIcon="expand_more"></mat-icon>
+                            </button>
+                            <div id="sim_select_upload_apply"
+                                class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                                <div class="py-1" role="none">
+                                    <button *ngFor="let simID of sim_data_list['select_area']"
+                                        class="block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                        role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
+                                        {{all_sims[simID].display_name}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="gridsize_select_upload_container" class="relative ml-2 text-gray-600">
+                            <button type="button"
+                                (mousedown)="toggleSelectElmSim($event, 'gridsize_select_upload_apply')"
+                                class="inline-flex items-center justify-center w-full px-1 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm md:px-4 lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                                id="menu-button" aria-expanded="true" aria-haspopup="true">
+                                <span>{{gridSize.label}}</span>
+                                <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
+                                    fontIcon="expand_more"></mat-icon>
+                            </button>
+                            <div id="gridsize_select_upload_apply"
+                                class="absolute left-0 z-10 hidden w-40 mt-1 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                                <div class="py-1" role="none">
+                                    <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
+                                        class="items-center block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
+                                        role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
+                                        (mousedown)="changeGridSize($event, gridSizeSel)">
+                                        {{gridSizeSel.label}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" (click)="runSim()"
+                            class='items-center w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
+                            id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
+                            Apply
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="toggle_openlayers_container" class="grid grid-rows-1 p-2 ml-2 bg-white rounded-md bg-opacity-70">
-        <span class="px-1 font-medium">Area Select</span>
-        <div id="simulation_select_container" class="inline-flex justify-center">
-            <!-- <button type="button" 
-                title="Upload Massing" (click)="uploadBtnClick($event)" [class]='getButtonClass("olMode", "upload", "inline-flex items-center justify-center w-10 h-10 px-1 py-2 mr-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")'
-                id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
-                <span class="material-symbols-outlined font-[24px] text-gray-600"> upload </span>
-            </button> -->
+</ng-template>
 
-            <button type="button" (click)="toggleAreaSelect()"
-                [class]='getButtonClass("olMode", ["draw", "upload"], "inline-flex items-center justify-center w-10 h-10 px-1 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")'
-                title="Draw Area" id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
-                <span class="material-symbols-outlined font-[24px] text-gray-600"> draw </span>
 
-                <!-- <mat-icon class="font-[22px] text-gray-600" aria-hidden="false" aria-label="Example home icon"
-                    fontIcon="draw"></mat-icon> -->
-            </button>
-            <div id="simulation_select_draw" class="hidden ml-2">
-                <div class="inline-flex">
-                    <div id="drawsim_select_container" class="relative text-gray-600">
-                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
-                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                            id="menu-button" aria-expanded="true" aria-haspopup="true">
-                            <span>{{drawSim.sim_name}}</span>
-                            <!-- Heroicon name: mini/chevron-down -->
-                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                                fontIcon="expand_more"></mat-icon>
-                        </button>
-                        <div id="sim_select_apply"
-                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                            <div class="py-1" role="none">
-                                <!-- <button
-                                    class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                                    role="menuitem" tabindex="-1">
-                                    Urban Scale
-                                </button>
-                                <button *ngFor="let simID of sim_data_list['urban']"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
-                                    {{all_sims[simID].display_name}}
-                                </button>
-                                <button
-                                    class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                                    role="menuitem" tabindex="-1">
-                                    Neighborhood Scale
-                                </button> -->
-                                <button *ngFor="let simID of sim_data_list['select_area']"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
-                                    {{all_sims[simID].display_name}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="gridsize_select_container" class="relative ml-2 text-gray-600">
-                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_apply')"
-                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                            id="menu-button" aria-expanded="true" aria-haspopup="true">
-                            <span>{{gridSize.label}}</span>
-                            <!-- Heroicon name: mini/chevron-down -->
-                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                                fontIcon="expand_more"></mat-icon>
-                        </button>
-                        <div id="gridsize_select_apply"
-                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                            <div class="py-1" role="none">
-                                <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
-                                    (mousedown)="changeGridSize($event, gridSizeSel)">
-                                    {{gridSizeSel.label}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" (click)="runSim()"
-                        class='w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
-                        id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
-                        Apply
-                    </button>
-                </div>
-            </div>
-            <div id="simulation_select_upload" class="hidden ml-2">
-                <div class="inline-flex">
-                    <div id="drawsim_select_upload_container" class="relative text-gray-600">
-                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_upload_apply')"
-                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                            id="menu-button" aria-expanded="true" aria-haspopup="true">
-                            <span>{{drawSim.sim_name}}</span>
-                            <!-- Heroicon name: mini/chevron-down -->
-                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                                fontIcon="expand_more"></mat-icon>
-                        </button>
-                        <div id="sim_select_upload_apply"
-                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                            <div class="py-1" role="none">
-                                <!-- <button
-                                    class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                                    role="menuitem" tabindex="-1">
-                                    Urban Scale
-                                </button>
-                                <button *ngFor="let simID of sim_data_list['urban']"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
-                                    {{all_sims[simID].display_name}}
-                                </button>
-                                <button
-                                    class="block w-full px-3 py-2 text-sm font-semibold text-left text-gray-700 cursor-default"
-                                    role="menuitem" tabindex="-1">
-                                    Neighborhood Scale
-                                </button> -->
-                                <button *ngFor="let simID of sim_data_list['select_area']"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
-                                    {{all_sims[simID].display_name}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="gridsize_select_upload_container" class="relative ml-2 text-gray-600">
-                        <button type="button" (mousedown)="toggleSelectElmSim($event, 'gridsize_select_upload_apply')"
-                            class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
-                            id="menu-button" aria-expanded="true" aria-haspopup="true">
-                            <span>{{gridSize.label}}</span>
-                            <!-- Heroicon name: mini/chevron-down -->
-                            <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
-                                fontIcon="expand_more"></mat-icon>
-                        </button>
-                        <div id="gridsize_select_upload_apply"
-                            class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                            <div class="py-1" role="none">
-                                <button *ngFor="let gridSizeSel of gridSizeSelections[drawSim.type]; index as i"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
-                                    role="menuitem" tabindex="-1" [id]="'gridSize-menu-item-' + i"
-                                    (mousedown)="changeGridSize($event, gridSizeSel)">
-                                    {{gridSizeSel.label}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" (click)="runSim()"
-                        class='w-20 h-10 p-1 ml-2 text-lg text-white bg-blue-700 rounded-md hover:bg-blue-800'
-                        id="toggle_openlayers_btn" aria-expanded="true" aria-haspopup="true">
-                        Apply
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <div id="openlayers_draw_ctrl_container" class="absolute z-[500] w-8 m-[1px] text-left top-20 right-2 hidden">
     <button type="button" (click)="uploadBtnClick($event)"
         class='inline-flex items-center justify-center w-8 h-8 p-1 mb-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-0'
@@ -236,51 +323,44 @@
         [class]='getButtonClass("olCtrlMode", "upload_scale", "inline-flex items-center justify-center w-8 h-8 p-1 font-medium text-gray-700 border border-gray-300  focus:outline-none focus:ring-0")'
         id="toggle_scale_uploaded_model" title="Resize Uploaded Model" aria-expanded="true" aria-haspopup="true">
         <span class="material-symbols-outlined text-[20px] text-gray-700"> pan_zoom </span>
-        <!-- <mat-icon class="text-[20px] text-red-700" aria-hidden="false" aria-label="scale" fontIcon="open_in_full"></mat-icon> -->
     </button>
     <button type="button" (click)="changeUploadMode('upload_rotate')"
         [class]='getButtonClass("olCtrlMode", "upload_rotate", "inline-flex items-center justify-center w-8 h-8 p-1 font-medium text-gray-700 border border-gray-300 focus:outline-none focus:ring-0")'
         id="toggle_rotate_uploaded_model" title="Rotate Uploaded Model" aria-expanded="true" aria-haspopup="true">
         <span class="material-symbols-outlined text-[20px] text-gray-700"> replay </span>
-        <!-- <mat-icon class="text-[20px] text-red-700" aria-hidden="false" aria-label="rotate" fontIcon="replay"></mat-icon> -->
     </button>
     <button type="button" (click)="toggleOpenlayersDrawMode()"
         class='inline-flex items-center justify-center w-8 h-8 p-1 mb-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-b-md hover:bg-gray-100 focus:outline-none focus:ring-0'
         title="Clear Uploaded Model" id="clear_upload_model_btn" aria-expanded="true" aria-haspopup="true"
         title="Clear">
         <span class="material-symbols-outlined text-[20px] text-red-700"> delete </span>
-        <!-- <mat-icon class="text-[20px] text-red-700" aria-hidden="false" aria-label="delete" fontIcon="delete"></mat-icon> -->
     </button>
-
     <button type="button" (click)="toggleDrawMode()"
         [class]='getButtonClass("olCtrlMode", "draw_sim_bound", "inline-flex items-center justify-center w-8 h-8 p-1 font-medium text-gray-700 border border-gray-300 rounded-t-md focus:outline-none focus:ring-0")'
         id="toggle_draw_btn_upload" title="Draw Simulation Boundary" aria-expanded="true" aria-haspopup="true">
-        <!-- <mat-icon class="text-[20px] text-green-700" aria-hidden="false" aria-label="polyline" fontIcon="polyline"></mat-icon> -->
         <span class="material-symbols-outlined text-[20px] text-blue-700"> polyline </span>
     </button>
     <button type="button" (click)="toggleUpBoundDrawMode()"
         [class]='getButtonClass("olCtrlMode", "draw_upload_bound", "inline-flex items-center justify-center w-8 h-8 p-1 font-medium text-gray-700 border border-gray-300 focus:outline-none focus:ring-0")'
         id="toggle_draw_area_btn" title="Draw Replaced Building Area" aria-expanded="true" aria-haspopup="true">
-        <!-- <mat-icon class="text-[20px] text-yellow-700" aria-hidden="false" aria-label="polyline" fontIcon="polyline"></mat-icon> -->
         <span class="material-symbols-outlined text-[20px] text-yellow-700"> polyline </span>
     </button>
-
-
     <button type="button" (click)="resetDrawing()"
         class='inline-flex items-center justify-center w-8 h-8 p-1 font-medium text-gray-700 bg-white border border-gray-300 rounded-b-md hover:bg-gray-100 focus:outline-none focus:ring-0'
         title="Delete Uploaded Simulation Area" id="clear_draw_area_btn" aria-expanded="true" aria-haspopup="true"
         title="Clear">
         <span class="material-symbols-outlined text-[20px] text-red-700"> delete </span>
-        <!-- <mat-icon class="text-[20px] text-red-700" aria-hidden="false" aria-label="delete" fontIcon="delete"></mat-icon> -->
     </button>
 </div>
 
 <div id="hud"
-    class="absolute z-10 hidden w-40 px-4 py-2 bg-gray-200 rounded-md pointer-events-none left-1 top-24 bg-opacity-70">
+    class="absolute z-10 hidden px-1 py-2 bg-gray-200 rounded-md pointer-events-none w-28 md:w-40 md:px-4 left-1 top-24 bg-opacity-70">
 </div>
-<div id="hud_wind" class="absolute z-10 hidden w-40 bg-gray-200 rounded-md pointer-events-none top-1 right-1 bg-opacity-70">
-    <div ></div>
-    <div class="px-2 pb-1 text-xs italic text-center">Weather Stations Closest to the Simulation Area</div>
+<div id="hud_wind"
+    class="absolute z-10 hidden bg-gray-200 rounded-md pointer-events-none w-28 lg:w-40 top-1 right-1 bg-opacity-70">
+    <div></div>
+    <div class="px-2 pb-1 text-[8px] lg:text-xs italic text-center">Weather Stations Closest to the Simulation Area
+    </div>
 </div>
 <div id="current_sim" class="hidden">None</div>
 

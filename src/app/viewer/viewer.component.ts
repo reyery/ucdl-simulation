@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener } from '@angular/core';
+import { AfterViewInit, OnDestroy, Component, HostListener } from '@angular/core';
 import * as itowns from 'itowns';
 import * as THREE from 'three';
 
@@ -6,7 +6,7 @@ import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BU
 import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
-import { addViewGeom, removeSimulation, removeViewerGroup } from './util/viewer.threejs';
+import { addViewGeom, addViewerGroup, removeSimulation, removeViewerGroup } from './util/viewer.threejs';
 
 import Map from 'ol/Map.js';
 import TileLayer from 'ol/layer/Tile.js';
@@ -31,80 +31,22 @@ import { Polygon } from 'ol/geom';
 import Style from 'ol/style/Style';
 import Fill from 'ol/style/Fill';
 import { SIMFuncs } from '@design-automation/mobius-sim-funcs';
-import Shape from '@doodle3d/clipper-js';
 import { readMassingFiles } from './util/viewer.readMassingFile';
+import { getBuildings } from './util/viewer.getBuildings';
 
 useGeographic();
 
 const TILE_SIZE = 500
 const AREA_TEXT_TEMPLATE = '<div styles="pointer-events: none;">Total Area: {{area}}km<sup>2</sup></div>'
-
+const UPDATE_GEOM_INTERVAL = 500
 function formatArea(polygon) {
   const area = getArea(polygon, { projection: 'EPSG:4326' });
   return AREA_TEXT_TEMPLATE.replace('{{area}}', (Math.round((area / 1000000) * 100) / 100).toString());
 };
-let measureTooltipElement;
-let measureTooltip;
-let changeCheck;
+let measureTooltipElement: HTMLDivElement;
+let measureTooltip: Overlay;
 
 
-function simImportFeature(sim: SIMFuncs, feature: Feature) {
-  const geom = (<Polygon>feature.getGeometry()).getCoordinates()
-  const properties = feature.getProperties()
-  const pgonHeight: number = properties['h'] ||
-    properties['H'] || properties['height'] ||
-    properties['Height'] || properties['AGL']
-
-  if (geom.length === 1) {
-    if (geom[0][0] === geom[0][geom[0].length - 1]) {
-      geom[0].splice(geom[0].length - 1, 1)
-    }
-    const pgCoords = geom[0].map(c => {
-      const coord = WGS84_SIM_PROJ.forward(c)
-      coord.push(0)
-      return sim.make.Position(coord)
-    })
-    const pg = sim.make.Polygon(pgCoords)
-    const pg_norm = sim.calc.Normal(pg, 1)
-    if (pg_norm[2] < 0) {
-      sim.edit.Reverse(pg)
-    }
-    if (pgonHeight) {
-      sim.make.Extrude(pg, pgonHeight, 1, <any>'quads')
-      sim.edit.Delete(pg, <any>'delete_selected')
-    }
-  } else {
-
-  }
-}
-
-function getThreeGeomCoords(threeObj): number[][][] {
-  if (threeObj.type === 'Group') {
-    let pgons = []
-    for (const obj of threeObj.children) {
-      pgons = pgons.concat(getThreeGeomCoords(obj))
-    }
-    return pgons
-  } else if (threeObj.type === 'Mesh') {
-    const gp = threeObj.geometry.attributes.position;
-    const pgons: number[][][] = [];
-    let pgonPos: number[][] = [];
-    let pgonVertCount = 0
-    for (let i = 0; i < gp.count; i++) {
-      const p = new THREE.Vector3().fromBufferAttribute(gp, i); // set p from `position`
-      const coord = [p.x, p.y, p.z / 39.37]
-      pgonPos.push(coord);
-      pgonVertCount += 1
-      if (pgonVertCount === 3) {
-        pgonVertCount = 0
-        pgons.push(pgonPos)
-        pgonPos = []
-      }
-    }
-    return pgons
-  }
-  return []
-}
 
 function featureStyleFunction(feature) {
   if (feature.get('draw_type') === 'sim_bound') {
@@ -174,7 +116,7 @@ enum OL_CTRL_MODE {
   selector: 'app-viewer',
   templateUrl: './viewer.component.html'
 })
-export class ViewerComponent implements AfterViewInit {
+export class ViewerComponent implements AfterViewInit, OnDestroy {
   public viewer: any;
   // the GI model to display
 
@@ -188,13 +130,19 @@ export class ViewerComponent implements AfterViewInit {
   public all_sims = ALL_SIMS;
   public sim_data_list = SIM_DATA;
 
+  // @ts-ignore
+  public isMobile = window.mobileAndTabletCheck()
+
+  private drawendCheck = null
   private mousedownTime = null
+  private updateGeom = true
+  private updateInterval = null
 
   private olMode = OL_MODE.none
 
   private olCtrlMode = OL_CTRL_MODE.draw_sim_bound
-  public drawSim = ALL_SIMS['wind'];
-  public gridSize = GRID_SIZE_SELECTIONS['js'][0]
+  public drawSim = ALL_SIMS['wind1'];
+  public gridSize = GRID_SIZE_SELECTIONS['js1'][0]
   public gridSizeSelections = GRID_SIZE_SELECTIONS
 
   private map: Map;
@@ -212,85 +160,90 @@ export class ViewerComponent implements AfterViewInit {
     simBoundary?: number[][],
     featureBoundary?: number[][]
   };
-  private uploadedGeomTransf = {
-    translate: [0, 0],
-    scale: 1,
-    rotate: 0
-  }
 
   private itown_layers = {}
-
+  private buildingGroup = null
+  private buildingMeshesIndex = {}
 
   constructor() {
+    this.buildingGroup = new THREE.Group()
+    this.buildingGroup.name = 'buildings'
   }
 
   ngAfterViewInit(): void {
-    this.createGeoViewer();
-    if (!SHOW_BUILDINGS) return;
-    setTimeout(() => {
-      setLoading(true)
-      this.getAllBuildings()
-      setLoading(false)
-    }, 500);
+    if (this.isMobile) {
+      const hud = document.getElementById('hud')
+      if (hud) {
+        hud.classList.remove('top-24')
+        hud.classList.add('top-12')
+      }
+    }
+    setLoading(true)
+    this.createGeoViewer().then(() => {
+      if (!SHOW_BUILDINGS) return;
+      setTimeout(() => {
+        this.getAllBuildings()
+        this.updateInterval = setInterval(async () => {
+          if (!this.view || !this.updateGeom || this.olMode !== OL_MODE.none) { return }
+          getBuildings(this.view, this.buildingGroup, this.buildingMeshesIndex)
+          this.updateGeom = false;
+        }, UPDATE_GEOM_INTERVAL);  
+        setLoading(false)
+      }, 2000);
+    })
+  }
+
+  ngOnDestroy(): void {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval)
+    }
+  }
+
+  closeSelectContainer(elementID, exceptionIDs) {
+    const container = document.getElementById(elementID) as HTMLDivElement
+    if (!container) { return }
+    if (!container.classList.contains('hidden')) {
+      let target = event.target as HTMLElement
+      while (true) {
+        if (exceptionIDs.indexOf(target.id) !== -1) {
+          break
+        }
+        if (target.parentElement) {
+          target = target.parentElement
+        } else {
+          container.classList.add('hidden')
+          break;
+        }
+      }
+    }
   }
 
   /*****************************************
    * =========== EVENT LISTENERS ===========
    */
   @HostListener('document:mousedown', ['$event'])
+  @HostListener('document:touchstart', ['$event'])
   onmousedown(event: MouseEvent) {
+    event.stopPropagation()
     this.mousedownTime = event.timeStamp
   }
   @HostListener('document:mouseup', ['$event'])
+  @HostListener('document:touchend', ['$event'])
   onmouseup(event: MouseEvent) {
+    event.stopPropagation()
+    if (performance.now() - this.drawendCheck < 1000) { return }
+    if (this.mousedownTime && this.view.controls.getZoom() > 13) {
+      this.updateGeom = true
+    }
     const timeDiff = event.timeStamp - this.mousedownTime
     this.mousedownTime = null
-    const select_container = document.getElementById('sim_select_content') as HTMLDivElement
-    if (!select_container.classList.contains('hidden')) {
-      let target = event.target as HTMLElement
-      while (true) {
-        if (target.id === 'sim_select_container') {
-          break
-        }
-        if (target.parentElement) {
-          target = target.parentElement
-        } else {
-          select_container.classList.add('hidden')
-          break;
-        }
-      }
-    }
-    let sim_container = document.getElementById('sim_select_apply') as HTMLDivElement
-    if (!sim_container.classList.contains('hidden')) {
-      let target = event.target as HTMLElement
-      while (true) {
-        if (target.id === 'drawsim_select_container' || target.id === 'drawsim_select_upload_container') {
-          break
-        }
-        if (target.parentElement) {
-          target = target.parentElement
-        } else {
-          sim_container.classList.add('hidden')
-          break;
-        }
-      }
-    }
-    sim_container = document.getElementById('sim_select_upload_apply') as HTMLDivElement
-    if (!sim_container.classList.contains('hidden')) {
-      let target = event.target as HTMLElement
-      while (true) {
-        console.log(target)
-        if (target.id === 'drawsim_select_container' || target.id === 'drawsim_select_upload_container') {
-          break
-        }
-        if (target.parentElement) {
-          target = target.parentElement
-        } else {
-          sim_container.classList.add('hidden')
-          break;
-        }
-      }
-    }
+    this.closeSelectContainer('sim_select_content', ['sim_select_container'])
+    this.closeSelectContainer('sim_select_apply', ['drawsim_select_container', 'drawsim_select_upload_container'])
+    this.closeSelectContainer('sim_select_upload_apply', ['drawsim_select_container', 'drawsim_select_upload_container'])
+    this.closeSelectContainer('gridsize_select_apply', ['gridsize_select_container'])
+    this.closeSelectContainer('gridsize_select_upload_apply', ['gridsize_select_upload_container'])
+    this.closeSelectContainer('mobile_menu', ['mobile_menu'])
+
     if (this.olMode !== OL_MODE.upload ||
       this.olCtrlMode === OL_CTRL_MODE.none ||
       this.olCtrlMode === OL_CTRL_MODE.draw_sim_bound ||
@@ -303,8 +256,10 @@ export class ViewerComponent implements AfterViewInit {
       this.olCtrlMode = OL_CTRL_MODE.none
     }
   }
+
   @HostListener('document:mousemove', ['$event'])
-  onmousemove(event: KeyboardEvent) {
+  onmousemove(event: MouseEvent) {
+    event.stopPropagation()
     if (this.olMode !== OL_MODE.upload) { return }
     if (this.olCtrlMode === OL_CTRL_MODE.upload_translate) {
       const anchor = [
@@ -379,7 +334,7 @@ export class ViewerComponent implements AfterViewInit {
   /**
    *
    */
-  public createGeoViewer() {
+  public async createGeoViewer() {
     const placement = {
       coord: new itowns.Coordinates('EPSG:4326', DEFAULT_LONGLAT[0], DEFAULT_LONGLAT[1]),
       range: 7000,
@@ -388,12 +343,23 @@ export class ViewerComponent implements AfterViewInit {
 
     this.container = document.getElementById('itowns_container') as HTMLDivElement;
     // this.view = new itowns.GlobeView(this.container, placement);
-    this.view = new itowns.GlobeView(this.container, placement);
-    this.view.controls.enableDamping = false;
-    this.view.controls.rotateSpeed = 0.5;
-    this.view.mainLoop.gfxEngine.renderer.setPixelRatio(window.devicePixelRatio);
-    this.view.mainLoop.gfxEngine.renderer.shadowMap.enabled = true;
-    this.view.mainLoop.gfxEngine.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.view = await new Promise((resolve) => {
+      const view = new itowns.GlobeView(this.container, placement);
+
+      view.addEventListener('initialized', () => {
+        view.controls.enableDamping = false;
+        view.controls.rotateSpeed = 0.5;
+        view.mainLoop.gfxEngine.renderer.setPixelRatio(window.devicePixelRatio);
+        view.mainLoop.gfxEngine.renderer.shadowMap.enabled = true;
+        view.mainLoop.gfxEngine.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        if (this.isMobile) {
+          view.controls.rotateSpeed = 0.2;
+          view.controls.zoomSpeed = 0.2;
+        }
+        console.log('initialized')
+        resolve(view)
+      })
+    })
     this.camTarget = this.view.controls.getLookAtCoordinate();
 
     this.view.controls.states.setFromOptions({
@@ -573,6 +539,7 @@ export class ViewerComponent implements AfterViewInit {
       if (this.olMode === OL_MODE.draw) {
         this.toggleOpenlayersDrawMode()
       }
+      this.toggleElement('mobile_menu', true)
       // this.toggleElement('toggle_openlayers_container', true)
     }
 
@@ -601,6 +568,7 @@ export class ViewerComponent implements AfterViewInit {
 
 
   toggleAreaSelect() {
+    this.toggleElement('mobile_menu', true)
     if (this.uploadSource && this.uploadSource.getFeatures().length > 0) {
       this.toggleOpenlayersUploadMode()
     } else {
@@ -828,11 +796,6 @@ export class ViewerComponent implements AfterViewInit {
       this.toggleOpenlayersUploadMode()
       this.uploadedGeomData = massingDataResult.uploadedGeomData
       this.addUploadFeature(this.uploadedGeomData.features)
-      this.uploadedGeomTransf = {
-        translate: [0, 0],
-        scale: 1,
-        rotate: 0
-      }
       await addViewGeom(this.view, this.uploadedGeomData.sim, this.uploadedGeomData.extent, 'upload_model')
       if (massingDataResult.translateModeSwitch) {
         this.toggleUploadTranslateMode()
@@ -1036,16 +999,10 @@ export class ViewerComponent implements AfterViewInit {
         tooltipCoord = geom.getInteriorPoint().getCoordinates();
         measureTooltipElement.innerHTML = output;
         measureTooltip.setPosition(tooltipCoord);
-        // const current = Number(new Date())
-        // changeCheck = current
-        // setTimeout(() => {
-        //   if (changeCheck === current) {
-        //     console.log('!!!!!!!!!!')
-        //   }
-        // }, 200);
       });
     })
 
+    const isMobile = this.isMobile
     draw.on('drawend', (data) => {
       data.feature.set('draw_type', 'sim_bound')
       //@ts-ignore
@@ -1068,10 +1025,21 @@ export class ViewerComponent implements AfterViewInit {
         console.log('HTTP ERROR:',ex)
         return null
       });
+      if (isMobile) {
+        this.toggleElement('mobile_menu', false)
+
+        // const mobileMenu = document.getElementById('mobile_menu')
+        // if (mobileMenu) {
+        //   mobileMenu.classList.remove('hidden')
+        // }
+      }
+      this.drawendCheck = performance.now()
     })
 
     const view = this.view
     map.on('moveend', function (e) {
+      console.log('~~~~~~~~~~~~~~ moveend')
+      this.updateGeom = true
       const newCenter = map.getView().getCenter()
       const newViewCoord = new itowns.Coordinates('EPSG:4326', newCenter[0], newCenter[1])
       itowns.CameraUtils.transformCameraToLookAtTarget(view, view.camera.camera3D, {
@@ -1126,6 +1094,8 @@ export class ViewerComponent implements AfterViewInit {
     } else if (this.olMode === OL_MODE.upload) {
       this.runSimUpload()
     }
+    // this.closeSelectContainer('mobile_menu', [])
+    this.toggleElement('mobile_menu', true)
   }
 
   async runSimDraw() {
@@ -1214,16 +1184,22 @@ export class ViewerComponent implements AfterViewInit {
       const check = this.view.getLayerById('Buildings_extruded')
       if (!check) {
         setTimeout(() => {
-          this.view.addLayer(this.itown_layers['buildings'])
+          // if (!this.isMobile) {
+          //   this.view.addLayer(this.itown_layers['buildings'])
+          // }
+          addViewerGroup(this.view, this.buildingGroup)
         }, 0);
       }
     } else if (type === 'flat') {
-      const tbr = this.view.getLayerById('Buildings_extruded')
-      if (tbr) {
-        setTimeout(() => {
-          this.view.removeLayer('Buildings_extruded')
-        }, 0);
-      }
+      removeViewerGroup(this.view, 'buildings')
+
+      // const tbr = this.view.getLayerById('Buildings_extruded')
+      // if (tbr) {
+      //   setTimeout(() => {
+      //     this.view.removeLayer('Buildings_extruded')
+      //     removeViewerGroup(this.view, 'buildings')
+      //   }, 0);
+      // }
     }
   }
 
@@ -1281,8 +1257,11 @@ export class ViewerComponent implements AfterViewInit {
       source: wmsSource,
     });
     this.view.addLayer(roadLayer);
-    this.view.addLayer(this.itown_layers['buildings']);
     this.view.addLayer(flatBuilding);
+    // if (!this.isMobile) {
+    //   this.view.addLayer(this.itown_layers['buildings']);
+    // }
+    addViewerGroup(this.view, this.buildingGroup)
     return true
   }
 

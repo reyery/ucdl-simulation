@@ -6,9 +6,27 @@ import { scale as chromaScale } from 'chroma-js';
 import { addGeom } from './viewer.threejs';
 import { ap_to_sim } from "../simulation-js/sim_convert_py_result"
 import { fetchData } from './viewer.fetch';
+import * as chroma from 'chroma-js';
 
 const sim = new SIMFuncs()
-
+const defaultStyles = {
+    maindiv: 'line-height:1.1; font-weight: 600; font-size: large;',
+    h3: '',
+    desc: 'font-size: 0.9rem; line-height: 1.1rem; font-style: italic; font-weight: 400;',
+    footnote: 'font-size: 0.75rem; line-height: 1rem; font-style: italic;',
+    extraInfo: '',
+    legendSize: [300, 20],
+    numLabels: 11
+}
+const mobileStyles = {
+    maindiv: 'line-height:1.1; font-weight: 600; font-size: small;',
+    h3: '',
+    desc: 'font-size: 0.6rem; line-height: 1.1rem; font-style: italic; font-weight: 400;',
+    footnote: 'font-size: 0.5rem; line-height: 1rem; font-style: italic;',
+    extraInfo: 'font-size: 0.7rem; ',
+    legendSize: [200, 20],
+    numLabels: 5
+}
 
 export async function getResultLayer(view, simulation, itown_layers) {
     if (simulation.maptype === 'tile') {
@@ -167,6 +185,104 @@ export async function removeResultLayer(view) {
     }
 }
 
+function legendVertical(size: number| [number, number], labels: string[], col_scale: string[] = null) {
+    size = Array.isArray(size) ? size : [size, 20] as [number, number];
+    // calc heights
+    const col_row_height = 2; //  2px
+    const label_row_height: number = Math.round(size[0] / ((labels.length - 1) * col_row_height)) * col_row_height;
+    const col_table_height: number = label_row_height * (labels.length - 1);
+    const col_num_rows: number = col_table_height / col_row_height;
+    const col_width: number = size[1];
+    // if no scale is provided, then default to false color scale
+    col_scale = col_scale === null ? ['blue', 'cyan', 'green', 'yellow', 'red'] : col_scale;
+    // color
+    const ch_scale = chroma.scale(col_scale);
+    const ch_domain = ch_scale.domain([0, col_num_rows]);
+    // ---------------------------------------------------------------------------------------------
+    // table with colours
+    let table_html1 = '<table cellspacing="0">'
+    const table_row1 = 
+        '<tr>' + 
+            '<td style="height:' + col_row_height + 'px; width:' + col_width + 
+                'px;padding:0px;background-color:rgb($col)" />' + 
+        '</tr>'
+    for (let i = 0; i < col_num_rows; i++) {
+        const col = ch_domain(i).gl();
+        const col_str: string = 
+            Math.round(col[0] * 255) + ',' + 
+            Math.round(col[1] * 255) + ',' + 
+            Math.round(col[2] * 255);
+        table_html1 += table_row1.replace('$col', col_str);
+    }
+    table_html1 += '</table>';
+    // ---------------------------------------------------------------------------------------------
+    // table with labels
+    let table_html2 = '<table cellspacing="0">'
+    const table_row2 = 
+        '<tr>' + 
+            '<td style="height:' + label_row_height + 'px;padding:0px;">$text</td>' + 
+        '</tr>'
+    for (const label of labels) {
+        table_html2 += table_row2.replace('$text', '  ' + label);
+    }
+    table_html2 += '</table>';
+    // ---------------------------------------------------------------------------------------------
+    // join and return
+    return '<table><td>' + table_html1 + '</td><td>' + table_html2 + '</td></table>';
+}
+function legendHorizontal(size: number| [number, number], labels: string[], col_scale: string[] = null) {
+    size = Array.isArray(size) ? size : [size, 20] as [number, number];
+    // calc heights
+    const col_width = 1;
+    const label_col_width: number = Math.round(size[0] / ((labels.length - 1) * col_width)) * col_width;
+    const table_width: number = label_col_width * (labels.length - 1);
+    const col_num_rows: number = table_width / col_width;
+    const row_height: number = size[1];
+    // if no scale is provided, then default to false color scale
+    col_scale = col_scale === null ? ['blue', 'cyan', 'green', 'yellow', 'red'] : col_scale;
+    // color
+    const ch_scale = chroma.scale(col_scale);
+    const ch_domain = ch_scale.domain([0, col_num_rows]);
+    // ---------------------------------------------------------------------------------------------
+    // table with colours
+    let table_html1 = '<table cellspacing="0">'
+    const table_row1 = `<td style="height:${row_height}px; width:${col_width}px;padding:0px;background-color:rgb($col)"/>`
+    for (let i = 0; i < col_num_rows; i++) {
+        const col = ch_domain(i).gl();
+        const col_str: string = 
+            Math.round(col[0] * 255) + ',' + 
+            Math.round(col[1] * 255) + ',' + 
+            Math.round(col[2] * 255);
+        table_html1 += table_row1.replace('$col', col_str);
+    }
+    table_html1 += '</table>';
+    // ---------------------------------------------------------------------------------------------
+    // table with labels
+    let table_html2 = '<table cellspacing="0">'
+    const table_col2 = `<td style="width:${label_col_width}px;padding:0px;font-size:8px;text-align:center;">$text</td>`
+    for (let i = 0; i < labels.length; i++) {
+        const label = labels[i]
+        let table_col2_text = table_col2.replace('$text', '  ' + label);
+        if (i === 0) {
+            table_col2_text = table_col2_text.replace('text-align:center', 'text-align:start')
+        } else if (i === (labels.length - 1)) {
+            table_col2_text = table_col2_text.replace('text-align:center', 'text-align:end')
+        }
+        table_html2 += table_col2_text;
+    }
+    table_html2 += '</table>';
+    // ---------------------------------------------------------------------------------------------
+    // join and return
+    return '<table><tr>' + table_html2 + '</tr><tr>' + table_html1 + '</tr></table>';
+}
+
+function legendStr(smallHUD: boolean, size: number| [number, number], labels: string[], col_scale: string[] = null) {
+    if (smallHUD) {
+        return legendHorizontal(size, labels, col_scale)
+    }
+    return legendVertical(size, labels, col_scale)
+}
+
 export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, unit, extra_info, desc, footnote }: any): string {
     // hide wind rose HUD (hide for simulation that's not wind situations)
     if (id !== 'wind') {
@@ -175,30 +291,32 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
             hud_wind_elm.classList.add('hidden')
         }
     }
+    const smallHUD = window.innerHeight < 500 || window.innerWidth < 500
+    let styles = defaultStyles
+    if (smallHUD) { styles = mobileStyles }
 
-    let hud_msg = '<div style="line-height:1.1; font-weight: 500; font-size: large;">'
-    hud_msg += '<h3>' + sim_name + '</h3>';
-    hud_msg += `<div style='font-size: 0.9rem; line-height: 1.1rem; font-style: italic; font-weight: 400;'>${desc ? desc : ''}</div>`
+    let hud_msg = `<div style="${styles.maindiv}">`
+    hud_msg += `<h3 style="${styles.h3}">` + sim_name + '</h3>';
+    hud_msg += `<div style='${styles.desc}'>${desc ? desc : ''}</div>`
     hud_msg += '</div>'
     // create a legend for the Heads Up Display
     const leg_labels: string[] = [];
     const col_range_diff = col_range[1] - col_range[0];
-    const num_labels = 11;
-    for (let i = 0; i < num_labels; i++) {
-        const val = col_range[0] + (col_range_diff * (i / (num_labels - 1)));
+    for (let i = 0; i < styles.numLabels; i++) {
+        const val = col_range[0] + (col_range_diff * (i / (styles.numLabels - 1)));
         const val_sf = sim.inl.sigFig(val, 2);
         leg_labels.push(val_sf + ' ' + unit);
     }
     let hud_leg;
     if (col_range_rev) {
         //@ts-ignore
-        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels.toReversed(), col_scale.toReversed());
+        hud_leg = legendStr(smallHUD, styles.legendSize, leg_labels.toReversed(), col_scale.toReversed());
     } else {
-        hud_leg = sim.inl.htmlColLeg([300, 20], leg_labels, col_scale);
+        hud_leg = legendStr(smallHUD, styles.legendSize as any, leg_labels, col_scale);
     }
     let hud_footnote = ''
     if (footnote) {
-        hud_footnote += `<div style='font-size: 0.75rem; line-height: 1rem; font-style: italic;'>${footnote}</div>`
+        hud_footnote += `<div style='${styles.footnote}'>${footnote}</div>`
     }
 
     // Heads Up Display
@@ -213,7 +331,7 @@ export function updateHUD({ id, sim_name, col_range, col_range_rev, col_scale, u
         }
         hud_elm.innerHTML = hud_msg + hud_leg + hud_footnote
         if (extra_info) {
-            hud_elm.innerHTML += `${extra_info}`
+            hud_elm.innerHTML += `<div style='${styles.extraInfo}'>${extra_info}</div>`
         }
         return hud_elm.innerHTML
     }
