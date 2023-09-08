@@ -592,6 +592,8 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
   toggleOpenlayersDrawMode() {
     if (this.olMode === OL_MODE.upload) {
       this.olMode = OL_MODE.draw
+      this.drawSim = ALL_SIMS['sky']
+      this.gridSize = GRID_SIZE_SELECTIONS['js1'][0]
       this.toggleElement('openlayers_upload_simBound_container', true)
     } else if (this.olMode === OL_MODE.draw) {
       this.olMode = OL_MODE.none
@@ -636,6 +638,8 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
   toggleOpenlayersUploadMode() {
     if (this.olMode === OL_MODE.draw) {
       this.olMode = OL_MODE.upload
+      this.drawSim = ALL_SIMS['sky']
+      this.gridSize = GRID_SIZE_SELECTIONS['js'][0]
       this.toggleElement('openlayers_draw_ctrl_container', true)
     } else if (this.olMode === OL_MODE.upload) {
       this.olMode = OL_MODE.none

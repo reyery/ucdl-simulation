@@ -109,7 +109,7 @@
                         class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
                         role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                         <div class="py-1" role="none">
-                            <button *ngFor="let simID of sim_data_list['select_area']"
+                            <button *ngFor="let simID of sim_data_list['neighborhood']"
                                 class="block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
                                 role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
                                 {{all_sims[simID].display_name}}
@@ -248,7 +248,7 @@
                                 class="absolute left-0 z-10 hidden mt-1 origin-top-right bg-white rounded-md shadow-lg w-60 ring-1 ring-black ring-opacity-5 focus:outline-none"
                                 role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                                 <div class="py-1" role="none">
-                                    <button *ngFor="let simID of sim_data_list['select_area']"
+                                    <button *ngFor="let simID of sim_data_list['neighborhood']"
                                         class="block w-full px-1 py-2 text-xs text-left text-gray-700 md:px-4 lg:text-sm hover:bg-gray-100 hover:text-gray-800 active:bg-blue-200 active:hover:bg-blue-300"
                                         role="menuitem" tabindex="-1" (mousedown)="changeDrawSim($event, simID)">
                                         {{all_sims[simID].display_name}}
