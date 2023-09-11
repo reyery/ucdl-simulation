@@ -212,12 +212,6 @@ export function raster_to_sim_sky(bounds, data, info) {
     sim.attrib.Set(null, 'extra_info', extra_info)
 
 
-    // console.log(canvas,  canvas.createPNGStream)
-    // const a = document.getElementById('test_canvas')
-    // if (a.children.length > 0) {
-    //     a.removeChild(a.firstElementChild);
-    // }
-    // a.appendChild(canvas)
 
     return [sim, projWGS84.inverse(extent2.bottom_left), info.col_range, canvas]
 }
@@ -399,13 +393,6 @@ export function eval_to_sim(bounds, data, info) {
     const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
     sim.attrib.Set(null, 'extra_info', extra_info)
 
-
-    // console.log(canvas,  canvas.createPNGStream)
-    // const a = document.getElementById('test_canvas')
-    // if (a.children.length > 0) {
-    //     a.removeChild(a.firstElementChild);
-    // }
-    // a.appendChild(canvas)
 
     return [sim, projWGS84.inverse(extent2.bottom_left), info.col_range, canvas]
 }
