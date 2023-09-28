@@ -3,7 +3,7 @@ import * as itowns from 'itowns';
 import * as THREE from 'three';
 
 import { BUILDING_TILES_URL, DEFAULT_LONGLAT, JS_SERVER, WGS84_SIM_PROJ, SHOW_BUILDINGS, SIM_DATA, GRID_SIZE_SELECTIONS, ALL_SIMS } from './util/viewer.const';
-import { getResultLayer, removeResultLayer, updateHUD, updateWindHUDPos } from './util/viewer.getresult';
+import { getResultLayer, removeResultLayer, updateHUD } from './util/viewer.getresult';
 import { runSimulation as runDrawSim } from './util/viewer.simulation';
 import { runSimulation as runUploadSim } from './util/viewer.simulationUpload';
 import { addViewGeom, addViewerGroup, removeSimulation, removeViewerGroup } from './util/viewer.threejs';
@@ -39,6 +39,19 @@ useGeographic();
 const TILE_SIZE = 500
 const AREA_TEXT_TEMPLATE = '<div styles="pointer-events: none;">Total Area: {{area}}km<sup>2</sup></div>'
 const UPDATE_GEOM_INTERVAL = 500
+
+const PERSP_CTRL = {
+  ORBIT: { mouseButton: THREE.MOUSE.MIDDLE, enable: true, finger: 2 },
+  PAN: { mouseButton: THREE.MOUSE.MIDDLE, keyboard: 17, enable: true, finger: 1 },
+  MOVE_GLOBE: { mouseButton: THREE.MOUSE.LEFT, bottom: 40, left: 37, right: 39, up: 38, enable: true }
+}
+
+const ORTHO_CTRL = {
+  ORBIT: { mouseButton: THREE.MOUSE.MIDDLE, enable: false, finger: 2 },
+  PAN: { mouseButton: THREE.MOUSE.MIDDLE, keyboard: 17, enable: true, finger: 1 },
+  MOVE_GLOBE: { mouseButton: THREE.MOUSE.LEFT, bottom: 40, left: 37, right: 39, up: 38, enable: true }
+}
+
 function formatArea(polygon) {
   const area = getArea(polygon, { projection: 'EPSG:4326' });
   return AREA_TEXT_TEMPLATE.replace('{{area}}', (Math.round((area / 1000000) * 100) / 100).toString());
@@ -46,7 +59,7 @@ function formatArea(polygon) {
 let measureTooltipElement: HTMLDivElement;
 let measureTooltip: Overlay;
 
-
+const API_KEY = 'AIzaSyDnbxu' + 'N06InzGId9RuP' + 'PGHTHtfBlQ2f0LY'
 
 function featureStyleFunction(feature) {
   if (feature.get('draw_type') === 'sim_bound') {
@@ -122,6 +135,8 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
 
   public container: HTMLDivElement;
   public view: itowns.GlobeView;
+  public camera = null;
+  public perspCamRotation = null;
   public camTarget;
   public updatedGrids: Set<string> = new Set();
   public updatedBuildings: Set<string> = new Set();
@@ -132,6 +147,11 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
 
   // @ts-ignore
   public isMobile = window.mobileAndTabletCheck()
+
+  private mapSession = {
+    sessionID: null,
+    expiry: null
+  }
 
   private drawendCheck = null
   private mousedownTime = null
@@ -187,7 +207,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
           if (!this.view || !this.updateGeom || this.olMode !== OL_MODE.none) { return }
           getBuildings(this.view, this.buildingGroup, this.buildingMeshesIndex)
           this.updateGeom = false;
-        }, UPDATE_GEOM_INTERVAL);  
+        }, UPDATE_GEOM_INTERVAL);
         setLoading(false)
       }, 2000);
     })
@@ -225,6 +245,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
   @HostListener('document:touchstart', ['$event'])
   onmousedown(event: MouseEvent) {
     event.stopPropagation()
+    event.preventDefault()
     this.mousedownTime = event.timeStamp
   }
   @HostListener('document:mouseup', ['$event'])
@@ -338,7 +359,8 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     const placement = {
       coord: new itowns.Coordinates('EPSG:4326', DEFAULT_LONGLAT[0], DEFAULT_LONGLAT[1]),
       range: 7000,
-      tilt: 50
+      heading: 0,
+      tilt: 89.5
     };
 
     this.container = document.getElementById('itowns_container') as HTMLDivElement;
@@ -346,6 +368,34 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     this.view = await new Promise((resolve) => {
       const view = new itowns.GlobeView(this.container, placement);
 
+
+      // const view = new itowns.GlobeView(this.container, placement, { camera: { type: itowns.CAMERA_TYPE.ORTHOGRAPHIC } });
+      // const newCam = new THREE.OrthographicCamera()
+      // const oldCam = view.camera.camera3D
+      // newCam['width'] = view.mainLoop.gfxEngine.getWindowSize().x,
+      // newCam['height'] = view.mainLoop.gfxEngine.getWindowSize().y,
+
+      // newCam.near = oldCam.near
+      // newCam.far = 63781370
+      // newCam.quaternion.copy(oldCam.quaternion)
+      // newCam.position.copy(oldCam.position)
+      // newCam.rotation.copy(oldCam.rotation)
+      // newCam.scale.copy(oldCam.scale)
+      // newCam.up.copy(oldCam.up)
+      // view.camera.camera3D = newCam
+      // const oldCtrls = view.controls
+      // // view.controls.camera = newCam
+      // view.controls = new itowns.GlobeControls(view, placement);
+      // view.controls.handleCollision = true;
+      // console.log(this.container.clientWidth, this.container.clientHeight)
+      // // view.camera.resize(this.container.clientWidth, this.container.clientHeight);
+      // // view.notifyChange()
+
+      // console.log('~~~~~~~~~', oldCtrls)
+      // console.log('~~~~~~~~~', view.controls)
+      // console.log('!!!!!!!!!', )
+
+      
       view.addEventListener('initialized', () => {
         view.controls.enableDamping = false;
         view.controls.rotateSpeed = 0.5;
@@ -362,18 +412,32 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     })
     this.camTarget = this.view.controls.getLookAtCoordinate();
 
-    this.view.controls.states.setFromOptions({
-      ORBIT: { mouseButton: THREE.MOUSE.MIDDLE, enable: true, finger: 2 },
-      PAN: { mouseButton: THREE.MOUSE.MIDDLE, keyboard: 17, enable: true, finger: 1 },
-      MOVE_GLOBE: { mouseButton: THREE.MOUSE.LEFT, bottom: 40, left: 37, right: 39, up: 38, enable: true }
-    });
+    this.view.controls.states.setFromOptions(PERSP_CTRL);
+
+
+    await fetch('https://tile.googleapis.com/v1/createSession?key=' + API_KEY, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        "mapType": "satellite",
+        "language": "en-US",
+        "region": "SG"
+      })
+    }).then(resp => resp.json()).then(session => {
+      this.mapSession.sessionID = session.session
+      this.mapSession.expiry = new Date(session.expiry)
+    })
 
     this.view.addLayer(new itowns.ColorLayer('ColorLayer', {
       source: new itowns.TMSSource({
         name: 'Google Map - Satellite Only',
         crs: 'EPSG:3857',
         format: 'image/jpg',
-        url: 'https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}',
+        url: 'https://tile.googleapis.com/v1/2dtiles/${z}/${x}/${y}?' + 
+        `session=${this.mapSession.sessionID}&key=${API_KEY}`,
+        // url: 'https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}',
         attribution: {
           name: 'Google Map - Satellite Only',
           html: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
@@ -386,7 +450,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     addLight(this.view)
     updateHUD({
       ...this.selected_simulation,
-      col_range: this.selected_simulation.col_range_label? this.selected_simulation.col_range_label : this.selected_simulation.col_range
+      col_range: this.selected_simulation.col_range_label ? this.selected_simulation.col_range_label : this.selected_simulation.col_range
     });
   }
 
@@ -527,7 +591,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       updateHUD({
         ...this.selected_simulation,
-        col_range: this.selected_simulation.col_range_label? this.selected_simulation.col_range_label : this.selected_simulation.col_range
+        col_range: this.selected_simulation.col_range_label ? this.selected_simulation.col_range_label : this.selected_simulation.col_range
       });
     }, 0);
 
@@ -617,8 +681,9 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
       if (this.selected_simulation.id !== 'none') {
         this.changeSim(new MouseEvent(''), 'none')
       }
-      this.toggleElement('itowns_container', true)
+      // this.toggleElement('itowns_container', true)
       this.toggleElement('openlayers_container', false)
+      this.toggleElement('itowns_camera_switch_container', true)
       if (!this.map) {
         setTimeout(() => {
           this.createopenlayersMap();
@@ -630,9 +695,10 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
       this.toggleElement('openlayers_draw_ctrl_container', true)
       this.toggleElement('simulation_select_draw', true)
       this.toggleElement('openlayers_container', true)
-      this.toggleElement('itowns_container', false)
+      this.toggleElement('itowns_camera_switch_container', false)
+      // this.toggleElement('itowns_container', false)
     }
-    updateWindHUDPos(this.olMode === OL_MODE.none)
+    // updateWindHUDPos(this.olMode === OL_MODE.none)
   }
 
   toggleOpenlayersUploadMode() {
@@ -657,8 +723,9 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
         this.changeSim(new MouseEvent(''), 'none')
       }
       this.switchBuildingLayer('flat')
-      this.toggleElement('itowns_container', true)
+      // this.toggleElement('itowns_container', true)
       this.toggleElement('openlayers_container', false)
+      this.toggleElement('itowns_camera_switch_container', true)
       if (!this.map) {
         setTimeout(() => {
           this.createopenlayersMap();
@@ -671,9 +738,10 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
       this.toggleElement('openlayers_draw_ctrl_container', true)
       this.toggleElement('simulation_select_upload', true)
       this.toggleElement('openlayers_container', true)
-      this.toggleElement('itowns_container', false)
+      this.toggleElement('itowns_camera_switch_container', false)
+      // this.toggleElement('itowns_container', false)
     }
-    updateWindHUDPos(this.olMode === OL_MODE.none)
+    // updateWindHUDPos(this.olMode === OL_MODE.none)
   }
 
   toggleOpenlayersDrawBtnClass() {
@@ -744,12 +812,12 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     this.olCtrlMode = OL_CTRL_MODE.upload_translate
   }
 
-  getButtonClass(attr, val: string|Array<string>, btnClass) {
+  getButtonClass(attr, val: string | Array<string>, btnClass) {
     if (Array.isArray(val)) {
       for (const v of val) {
         if (this[attr] === v) {
           return btnClass + ' bg-blue-300 hover:bg-blue-200'
-        }    
+        }
       }
       return btnClass + ' bg-white hover:bg-gray-100'
     }
@@ -844,7 +912,9 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
     const mapLayer = new TileLayer({
       source: new XYZ({
         attributions: 'Map data ©2019 <a href="https://www.google.com/">Google</a>',
-        url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+        url: 'https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?' + 
+        `session=${this.mapSession.sessionID}&key=${API_KEY}`,
+        // url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
       }),
     })
 
@@ -1026,7 +1096,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
           bounds: bounds
         })
       }).catch(ex => {
-        console.log('HTTP ERROR:',ex)
+        console.log('HTTP ERROR:', ex)
         return null
       });
       if (isMobile) {
@@ -1181,6 +1251,33 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
 
     setLoading(false)
     this.toggleOpenlayersUploadMode()
+  }
+
+  switchCamera(type = 'persp') {
+    if (type === 'persp') {
+      this.toggleElement('switch_to_ortho_camera', false)
+      this.toggleElement('switch_to_persp_camera', true)
+      const lookCoord = this.view.controls.getLookAtCoordinate()
+      itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+        coord: lookCoord,
+        tilt: this.perspCamRotation[0],
+        heading: this.perspCamRotation[1]
+      })
+      this.view.controls.states.setFromOptions(PERSP_CTRL);
+    } else if (type === 'ortho') {
+      this.toggleElement('switch_to_ortho_camera', true)
+      this.toggleElement('switch_to_persp_camera', false)
+      this.perspCamRotation = this.view.controls.getCameraOrientation()
+      console.log(this.perspCamRotation)
+      const lookCoord = this.view.controls.getLookAtCoordinate()
+      itowns.CameraUtils.transformCameraToLookAtTarget(this.view, this.view.camera.camera3D, {
+        coord: lookCoord,
+        tilt: 90,
+        heading: 0
+      })
+      this.view.controls.states.setFromOptions(ORTHO_CTRL);
+    }
+    this.view.notifyChange()
   }
 
   switchBuildingLayer(type) {

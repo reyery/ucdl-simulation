@@ -431,9 +431,9 @@ export async function visResult(latLongs, simulation, result, surrounding = null
     console.log('sens_pgons', sens_pgons, sens_pgons.length)
     console.log('result', result)
     if (simulation.id === 'sky') {
-        for (let i = 0; i < result.length; i++) {
-            result[i] = result[i] / 100
-        }
+        // for (let i = 0; i < result.length; i++) {
+        //     result[i] = result[i] / 100
+        // }
         const UHII = Math.round((-6.51 * (result.reduce((partialSum, a) => partialSum + a, 0)) / result.length + 7.13) * 10) / 10
         const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
         sim.attrib.Set(null, 'extra_info', extra_info)
@@ -537,9 +537,9 @@ export async function visResult1(latLongs, simulation, response, gridSize) {
     }
 
     if (simulation.id === 'sky') {
-        for (let i = 0; i < result.length; i++) {
-            result[i] = result[i] / 100
-        }
+        // for (let i = 0; i < result.length; i++) {
+        //     result[i] = result[i] / 100
+        // }
         const UHII = Math.round((-6.51 * (result.reduce((partialSum, a) => partialSum + a, 0)) / result.length + 7.13) * 10) / 10
         const extra_info = `<div>Air temp increment (UHI): ${UHII}°C</div>`
         sim.attrib.Set(null, 'extra_info', extra_info)
@@ -674,7 +674,8 @@ function processResult(result, info) {
     if (info.id === 'sky') {
         const processedResult = []
         for (const r of result) {
-            processedResult.push(7.13 - (6.51 * r / 100))
+            // processedResult.push(7.13 - (6.51 * r / 100))
+            processedResult.push(7.13 - (6.51 * r))
         }
         return processedResult
     // } else if (info.id === 'wind') {

@@ -52,6 +52,7 @@ async function runJSSimulation(view, simData, simulation, gridSize) {
   // TODO: add result as textured plane rather than multiple colored squares
   // eval_to_sim()
   const [resultSIM, surrSim, canvas, minCoord, offset, colRange] = await visResult1(simData.simBoundary, simulation, resp, gridSize)
+  console.log(surrSim)
   // var link = document.createElement('a');
   // link.download = 'filename.png';
   // link.href = canvas.toDataURL()
