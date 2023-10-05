@@ -1,5 +1,6 @@
-<div id="itowns_container" class="w-[100vw] h-[100vh]"></div>
-<div id="openlayers_container" class="w-[100vw] h-[100vh] hidden"></div>
+<div id="itowns_container" class="w-[100vw] h-[100vh] z-[1] absolute"></div>
+<div id="itowns_container_dummy" class="w-[100vw] h-[100vh] z-[1] absolute hidden"></div>
+<div id="openlayers_container" class="w-[100vw] h-[100vh] z-[2] absolute bg-white hidden"></div>
 
 <ng-container *ngIf="isMobile; else SimSelWide">
     <div class="absolute z-[500] inline-flex text-left top-1 left-1 text-xs lg:text-base">
@@ -147,7 +148,7 @@
     </div>
 </ng-container>
 <ng-template #SimSelWide>
-    <div class="absolute z-[500] inline-flex text-left top-1 left-1 text-xs lg:text-base">
+    <div class="absolute z-[500] inline-flex text-left top-1 left-1 text-xs lg:text-base cursor-default">
         <div id="whole_singapore_container" class="grid p-2 bg-white rounded-md bg-opacity-70">
             <span class="px-1 font-medium">Whole Singapore</span>
             <div id="sim_select_container" class="relative text-gray-600 ">
@@ -188,7 +189,7 @@
                     <div class="inline-flex">
                         <div id="drawsim_select_container" class="relative text-gray-600">
                             <button type="button" (mousedown)="toggleSelectElmSim($event, 'sim_select_apply')"
-                                class="items-center inline-flex justify-center w-full px-1 py-0.5 md:px-4 md:py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                                class="inline-flex items-center justify-center w-full px-4 py-2 text-xs font-medium leading-6 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm lg:text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                                 id="menu-button" aria-expanded="true" aria-haspopup="true">
                                 <span>{{drawSim.display_name}}</span>
                                 <mat-icon class="font-[22px]" aria-hidden="false" aria-label="Example home icon"
@@ -290,6 +291,23 @@
     </div>
 </ng-template>
 
+<div id="itowns_camera_switch_container" class="absolute z-[500] w-8 m-[1px] text-left top-1 right-2">
+    <div id="switch_to_ortho_camera" class="">
+        <button type="button" (click)="switchCamera('ortho')"
+            class='items-center justify-center w-8 h-8 p-1 mb-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-0'
+            id="switch_itown_camera" title="Switch to top-down view" aria-expanded="true" aria-haspopup="true">
+            <span class="material-symbols-outlined text-[20px] text-gray-700"> vrpano </span>
+        </button>
+
+    </div>
+    <div id="switch_to_persp_camera" class="hidden">
+        <button type="button" (click)="switchCamera('persp')"
+            class='items-center justify-center w-8 h-8 p-1 mb-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-0'
+            id="switch_itown_camera" title="Switch to perspective view" aria-expanded="true" aria-haspopup="true">
+            <span class="material-symbols-outlined text-[20px] text-gray-700"> globe </span>
+        </button>
+    </div>
+</div>
 
 <div id="openlayers_draw_ctrl_container" class="absolute z-[500] w-8 m-[1px] text-left top-20 right-2 hidden">
     <button type="button" (click)="uploadBtnClick($event)"
@@ -357,7 +375,7 @@
     class="absolute z-10 hidden px-1 py-2 bg-gray-200 rounded-md pointer-events-none w-28 md:w-40 md:px-4 left-1 top-24 bg-opacity-70">
 </div>
 <div id="hud_wind"
-    class="absolute z-10 hidden bg-gray-200 rounded-md pointer-events-none w-28 lg:w-40 top-1 right-1 bg-opacity-70">
+    class="absolute z-10 hidden bg-gray-200 rounded-md pointer-events-none w-28 lg:w-40 top-1 right-12 bg-opacity-70">
     <div></div>
     <div class="px-2 pb-1 text-[8px] lg:text-xs italic text-center">Weather Stations Closest to the Simulation Area
     </div>
@@ -366,4 +384,11 @@
 
 <div id="mouse_position" class="hidden"></div>
 <input id="massing_upload" class="hidden" type="file" multiple='true' (change)="uploadMassing($event)"
-    accept=".shp, .skp, .dbf, .shx, .dae" />
+    accept=".dae,.shp,.skp,.dbf,.shx" />
+
+<div class="absolute z-50 pointer-events-none bottom-1 left-1 w-[12rem] md:w-[20rem] lg:w-[28rem]">
+    <img src="assets/sec-frs-nus-doa-ucdl_white.svg">
+</div>
+<div id="test_canvas" class="absolute z-50 pointer-events-none top-20 left-20 w-80"></div>
+
+<app-loading-panel></app-loading-panel>

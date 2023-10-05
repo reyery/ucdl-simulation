@@ -102,7 +102,7 @@ export const ALL_SIMS = {
         sim_name: 'Urban Heat Island Intensity',
         desc: '(estimated by Sky View Factor)',
         footnote: null,
-        type: 'py',
+        type: 'py1',
         maptype: 'tile',
         col_range: [7, 0],
         col_range_label: [7, 0],
@@ -200,10 +200,10 @@ export const GRID_SIZE_SELECTIONS = {
         {gridsize: 1, label: '1m x 1m', type: 'py'},
     ],
     'py1': [
-        {gridsize: 10, label: '10m x 10m', type: 'py'},
-        {gridsize: 5, label: '5m x 5m', type: 'py'},
-        {gridsize: 2, label: '2m x 2m', type: 'py'},
         {gridsize: 1, label: '1m x 1m', type: 'py'},
+        {gridsize: 100, label: '100m x 100m', type: 'py'},
+        {gridsize: 200, label: '200m x 200m', type: 'py'},
+        {gridsize: 300, label: '300m x 300m', type: 'py'},
     ],
     'js': [
         {gridsize: 10, label: '10m x 10m', type: 'js'},

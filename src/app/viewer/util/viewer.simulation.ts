@@ -111,9 +111,7 @@ async function runJSSimulation(view, coords, simulation, gridSize) {
 }
 
 async function runPYSimulation(view, coords, simulation, gridSize) {
-  if (simulation.id === 'sky') {
-    return sky(view, coords, simulation)
-  } else if (simulation.id === 'ap') {
+  if (simulation.id === 'ap') {
     return ap(view, coords, simulation)
   }
 
@@ -123,7 +121,7 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
     bounds: coords[0],
     grid_size: gridSize
   }
-  console.log('request', PY_SERVER + simulation.id, request)
+  console.log('request:', request)
   const resp = await fetchData(PY_SERVER + simulation.id, {
     method: 'POST',
     headers: {
@@ -133,58 +131,9 @@ async function runPYSimulation(view, coords, simulation, gridSize) {
   })
   if (!resp) { return [simulation.col_range, '']};
 
+  const [result, bottomLeft, colRange, canvas] = raster_to_sim_sky(coords[0], resp, simulation, gridSize)
 
-  // console.log('response', response)
-  const [result, bottomLeft, colRange] = raster_to_sim(coords[0], resp, simulation)
-  console.log('colRange', colRange)
-  const extra_info = result.attrib.Get(null, 'extra_info')
-
-  const threeJSGroup = new THREE.Group();
-  threeJSGroup.name = 'simulation_result';
-
-  const geom = await addGeom(result, null, 1) as any
-  threeJSGroup.add(geom)
-
-  const camTarget = new itowns.Coordinates('EPSG:4326', bottomLeft[0], bottomLeft[1], 1);
-  const cameraTargetPosition = camTarget.as(view.referenceCrs);
-
-  threeJSGroup.position.copy(cameraTargetPosition);
-
-  itowns.OrientationUtils.quaternionFromEnuToGeocent(camTarget, threeJSGroup.quaternion)
-  threeJSGroup.updateMatrixWorld(true);
-
-  // current_sim_div = document.getElementById('current_sim') as HTMLDivElement
-  // if (current_sim_div && current_sim_div.innerHTML !== result_type) {
-  //   return false;
-  // }
-
-  view.scene.add(threeJSGroup);
-  setTimeout(() => {
-    view.notifyChange();
-  }, 0);
-  return [colRange, extra_info]
-}
-
-async function sky(view, coords, simulation) {
-  if (!coords || coords.length === 0) { return [null, null] }
-
-  console.log(JSON.stringify({
-    bounds: coords[0]
-  }))
-  const resp = await fetchData(PY_SERVER + simulation.id, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      bounds: coords[0]
-    })
-  })
-  if (!resp) { return [simulation.col_range, '']};
-
-  const [result, bottomLeft, colRange, canvas] = raster_to_sim_sky(coords[0], resp, simulation)
-
-  const canvasTexture = new THREE.CanvasTexture(canvas)
+  const canvasTexture = new THREE.CanvasTexture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.NearestFilter)
 
   const threeJSGroup = new THREE.Group();
   threeJSGroup.name = 'simulation_result';
@@ -192,7 +141,6 @@ async function sky(view, coords, simulation) {
   const geom = await addGeomSky(result, canvasTexture, 1) as any
   threeJSGroup.add(geom)
 
-
   const camTarget = new itowns.Coordinates('EPSG:4326', bottomLeft[0], bottomLeft[1], 1);
   const cameraTargetPosition = camTarget.as(view.referenceCrs);
 
@@ -209,12 +157,19 @@ async function sky(view, coords, simulation) {
   // }
 
   view.scene.add(threeJSGroup);
+
+  console.log('__________ simulation', simulation)
+
+  if (simulation.id === 'wind') {
+    updateWindHUD(resp.wind_stns)
+  }
+
   setTimeout(() => {
     view.notifyChange();
   }, 0);
   return [colRange, extra_info]
-
 }
+
 
 async function ap(view, coords, simulation) {
   if (!coords || coords.length === 0) { return [null, null] }

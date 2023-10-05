@@ -10,19 +10,25 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingPanelComponent } from './loading-panel/loading-panel.component';
 import { AppComponent } from './app.component';
 import { ViewerComponent } from './viewer/viewer.component';
+import { UserRegisterComponent } from './user-register/user-register.component';
+import { AppRoutingModule } from './app-routing.module';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
     AppComponent,
     ViewerComponent,
-    LoadingPanelComponent
+    LoadingPanelComponent,
+    UserRegisterComponent
   ],
   imports: [
+    FormsModule,
     BrowserModule,
     BrowserAnimationsModule,
     MatIconModule,
     MatButtonToggleModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    AppRoutingModule
   ],
   providers: [],
   bootstrap: [AppComponent]
