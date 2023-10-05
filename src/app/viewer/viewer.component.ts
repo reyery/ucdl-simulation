@@ -360,7 +360,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
       coord: new itowns.Coordinates('EPSG:4326', DEFAULT_LONGLAT[0], DEFAULT_LONGLAT[1]),
       range: 7000,
       heading: 0,
-      tilt: 89.5
+      tilt: 50
     };
 
     this.container = document.getElementById('itowns_container') as HTMLDivElement;
@@ -370,32 +370,7 @@ export class ViewerComponent implements AfterViewInit, OnDestroy {
 
 
       // const view = new itowns.GlobeView(this.container, placement, { camera: { type: itowns.CAMERA_TYPE.ORTHOGRAPHIC } });
-      // const newCam = new THREE.OrthographicCamera()
-      // const oldCam = view.camera.camera3D
-      // newCam['width'] = view.mainLoop.gfxEngine.getWindowSize().x,
-      // newCam['height'] = view.mainLoop.gfxEngine.getWindowSize().y,
 
-      // newCam.near = oldCam.near
-      // newCam.far = 63781370
-      // newCam.quaternion.copy(oldCam.quaternion)
-      // newCam.position.copy(oldCam.position)
-      // newCam.rotation.copy(oldCam.rotation)
-      // newCam.scale.copy(oldCam.scale)
-      // newCam.up.copy(oldCam.up)
-      // view.camera.camera3D = newCam
-      // const oldCtrls = view.controls
-      // // view.controls.camera = newCam
-      // view.controls = new itowns.GlobeControls(view, placement);
-      // view.controls.handleCollision = true;
-      // console.log(this.container.clientWidth, this.container.clientHeight)
-      // // view.camera.resize(this.container.clientWidth, this.container.clientHeight);
-      // // view.notifyChange()
-
-      // console.log('~~~~~~~~~', oldCtrls)
-      // console.log('~~~~~~~~~', view.controls)
-      // console.log('!!!!!!!!!', )
-
-      
       view.addEventListener('initialized', () => {
         view.controls.enableDamping = false;
         view.controls.rotateSpeed = 0.5;
