@@ -355,13 +355,13 @@ export function updateWindHUD(wind_stns: string[]) {
         hud_wind_elm.appendChild(img);
     }
 }
-export function updateWindHUDPos(stickToRight) {
-    const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
-    if (hud_wind_elm) {
-        if (stickToRight) {
-            hud_wind_elm.style.right = '0.25rem';
-        } else {
-            hud_wind_elm.style.right = '3rem';
-        }
-    }
-  }
+// export function updateWindHUDPos(stickToRight) {
+//     const hud_wind_elm = document.getElementById('hud_wind') as HTMLDivElement;
+//     if (hud_wind_elm) {
+//         if (stickToRight) {
+//             hud_wind_elm.style.right = '0.25rem';
+//         } else {
+//             hud_wind_elm.style.right = '3rem';
+//         }
+//     }
+// }
